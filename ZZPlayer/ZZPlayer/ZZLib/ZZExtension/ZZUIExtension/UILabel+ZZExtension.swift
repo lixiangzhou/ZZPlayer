@@ -24,7 +24,6 @@ public extension UILabel {
         font = UIFont.systemFont(ofSize: fontSize)
         self.textColor = textColor
         self.text = text
-        numberOfLines = 0
         
         sizeToFit()
     }
