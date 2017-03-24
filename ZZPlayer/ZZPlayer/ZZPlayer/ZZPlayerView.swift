@@ -67,7 +67,8 @@ class ZZPlayerView: UIView {
     var playPauseBtn = UIButton(imageName: zz_bundleImageName("kr-video-player-play"))
     var fullScreenBtn = UIButton(imageName: zz_bundleImageName("kr-video-player-fullscreen"))
     var nextBtn = UIButton(imageName: zz_bundleImageName("skip_next"))
-    var progressView = UISlider()
+    var progressView = UIProgressView()
+    var sliderView = UISlider()
     var startTimeLabel = UILabel(text: "00:00", fontSize: 12, textColor: UIColor.white, textAlignment: .right)
     var totalTimeLabel = UILabel(text: "00:00", fontSize: 12, textColor: UIColor.white)
     
@@ -80,16 +81,22 @@ class ZZPlayerView: UIView {
     fileprivate var bottomView: UIView!
 }
 
-// MARK: - 
+// MARK: - ZZPlayerDelegate
 extension ZZPlayerView: ZZPlayerDelegate {
     func player(_ player: ZZPlayer, playTime: Int, totalTime: Int) {
         
         startTimeLabel.text = String(format: "%02zd:%02zd", playTime / 60, playTime % 60)
         totalTimeLabel.text = String(format: "%02zd:%02zd", totalTime / 60, totalTime % 60)
+        
+        sliderView.value = Float(playTime) / Float(totalTime)
     }
     
     func player(_ player: ZZPlayer, bufferedTime: Int, totalTime: Int) {
-        
+        progressView.progress = Float(bufferedTime) / Float(totalTime)
+    }
+    
+    func player(_ player: ZZPlayer, changed state: ZZPlayerState) {
+        playPauseBtn.setImage(state == .playing ? zz_bundleImage("kr-video-player-play") : zz_bundleImage("kr-video-player-pause"), for: .normal)
     }
 }
 
@@ -100,8 +107,10 @@ extension ZZPlayerView {
     }
     
     func play_pause() {
-        print(#function)
-        player?.play()
+        guard let player = player else {
+            return
+        }
+        player.isPlaying ? player.pauseByUser() : player.play()
     }
     
     func next_piece() {
@@ -132,19 +141,28 @@ extension ZZPlayerView {
         bottomView.backgroundColor = UIColor.clear
         bottomGradientLayer = addGradientLayer(toView: bottomView, colors: [UIColor.clear.cgColor, UIColor(red: 0, green: 0, blue: 0, alphaValue: 0.9).cgColor])
         
-        progressView.setThumbImage(zz_bundleImage("slider"), for: .normal)
+        sliderView.setThumbImage(zz_bundleImage("slider"), for: .normal)
+        sliderView.minimumTrackTintColor = UIColor(red: 45, green: 186, blue: 247)
+        sliderView.maximumTrackTintColor = UIColor.clear
+        sliderView.backgroundColor = UIColor.clear
+//        sliderView.value = 0.5
+        
+        progressView.trackTintColor = UIColor(white: 1, alpha: 0.5)
+        progressView.progressTintColor = UIColor(white: 1, alpha: 0.7)
+//        progressView.progress = 0.7
         
         bottomView.addSubview(playPauseBtn)
         bottomView.addSubview(fullScreenBtn)
         bottomView.addSubview(nextBtn)
         bottomView.addSubview(progressView)
+        bottomView.addSubview(sliderView)
         bottomView.addSubview(startTimeLabel)
         bottomView.addSubview(totalTimeLabel)
         
         playPauseBtn.addTarget(self, action: #selector(play_pause), for: .touchUpInside)
         nextBtn.addTarget(self, action: #selector(next_piece), for: .touchUpInside)
         fullScreenBtn.addTarget(self, action: #selector(fullscreen), for: .touchUpInside)
-        progressView.addTarget(self, action: #selector(playProgress), for: .valueChanged)
+        sliderView.addTarget(self, action: #selector(playProgress), for: .valueChanged)
         
         bottomView.snp.makeConstraints { (maker) in
             maker.bottom.left.right.equalTo(self)
@@ -154,12 +172,14 @@ extension ZZPlayerView {
         playPauseBtn.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.left.equalTo(10)
+            maker.width.height.equalTo(30)
         }
         
         nextBtn.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.left.equalTo(playPauseBtn.snp.right).offset(10)
             maker.right.equalTo(startTimeLabel.snp.left).offset(-10)
+            maker.width.height.equalTo(30)
         }
         
         let timeLabelWidth = ceil("000:00".zz_size(withLimitWidth: 100, fontSize: 12).width)
@@ -168,12 +188,18 @@ extension ZZPlayerView {
         startTimeLabel.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.width.equalTo(timeLabelWidth)
-            maker.right.equalTo(progressView.snp.left).offset(-5)
+            maker.right.equalTo(sliderView.snp.left).offset(-5)
+        }
+        
+        sliderView.snp.makeConstraints { (maker) in
+            maker.centerY.equalTo(bottomView)
+            maker.right.equalTo(totalTimeLabel.snp.left).offset(-5)
         }
         
         progressView.snp.makeConstraints { (maker) in
-            maker.centerY.equalTo(bottomView)
-            maker.right.equalTo(totalTimeLabel.snp.left).offset(-5)
+            maker.height.equalTo(2)
+            maker.width.centerX.equalTo(sliderView)
+            maker.centerY.equalTo(sliderView).offset(0.5)
         }
         
         totalTimeLabel.snp.makeConstraints { (maker) in
@@ -185,6 +211,7 @@ extension ZZPlayerView {
         fullScreenBtn.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.right.equalTo(-10)
+            maker.width.height.equalTo(30)
         }
     }
     

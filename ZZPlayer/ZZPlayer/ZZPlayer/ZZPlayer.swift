@@ -9,7 +9,7 @@
 import UIKit
 import AVFoundation
 
-enum ZZPlayerState {
+@objc enum ZZPlayerState: Int {
     case idle               // 空闲状态
 //    case readyToPlay        // 可以播放状态
     case playing            // 播放中
@@ -43,6 +43,7 @@ enum ZZPlayerObseredKeyPath: String {
 @objc protocol ZZPlayerDelegate {
     func player(_ player: ZZPlayer, bufferedTime: Int, totalTime: Int)
     func player(_ player: ZZPlayer, playTime: Int, totalTime: Int)
+    @objc optional func player(_ player: ZZPlayer, changed state: ZZPlayerState)
 }
 
 class ZZPlayer: UIView {
@@ -66,10 +67,9 @@ class ZZPlayer: UIView {
     }
     
     // MARK: - Properties
-    var playerLayer: AVPlayerLayer?
+    
     weak var delegate: ZZPlayerDelegate?
-    /// 是否由用户点击暂停还是由其他的原因（如没有缓冲好数据）
-    var pausedByUser = false
+    
     var playerItemModel: ZZPlayerItemModel? {
         didSet {
 
@@ -115,7 +115,15 @@ class ZZPlayer: UIView {
         }
     }
     
-    var state: ZZPlayerState = .idle {
+    var isPlaying: Bool {
+        return state == .playing
+    }
+    
+    fileprivate var playerLayer: AVPlayerLayer?
+    /// 是否由用户点击暂停还是由其他的原因（如没有缓冲好数据）
+    fileprivate var pausedByUser = false
+    
+    fileprivate var state: ZZPlayerState = .idle {
         didSet {
             
             guard let playerLayer = playerLayer,
@@ -140,11 +148,15 @@ class ZZPlayer: UIView {
             case .failed:       // 失败
                 break
             }
+            
+            if oldValue != state {
+                delegate?.player?(self, changed: state)
+            }
         }
     }
     
     
-    var isBuffering = false
+    fileprivate var isBuffering = false
 }
 
 
