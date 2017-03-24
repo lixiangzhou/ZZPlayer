@@ -19,19 +19,14 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        print(NSNotification.Name.AVPlayerItemDidPlayToEndTime.rawValue)
+        
         let playerView = view.zz_add(subview: ZZPlayerView(frame: CGRect(x: 20, y: 20, width: view.zz_width - 40, height: (view.zz_width - 40) * 3 / 4))) as! ZZPlayerView
         
         playerView.playerItemModel = VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/1455782903700jy.mp4"])
         playerView.backgroundColor = UIColor.black
-        
-//        let asset = AVAsset(url: URL(string: "http://baobab.wdjcdn.com/1455782903700jy.mp4")!)
-//        let item = AVPlayerItem(asset: asset)
-//        let player = AVPlayer(playerItem: item)
-//        let playerLayer = AVPlayerLayer(player: player)
-//        playerLayer.frame = CGRect(x: 20, y: 20, width: view.zz_width - 40, height: (view.zz_width - 40) * 3 / 4)
-//        
-//        self.view.layer.insertSublayer(playerLayer, at: 0)
-//        player.play()
+
+
     }
 
     override func didReceiveMemoryWarning() {

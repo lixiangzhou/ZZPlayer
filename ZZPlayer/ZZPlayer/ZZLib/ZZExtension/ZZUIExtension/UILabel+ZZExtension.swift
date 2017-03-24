@@ -18,7 +18,7 @@ public extension UILabel {
     /// - parameter textColor: 字体颜色
     ///
     /// - returns: Label
-    convenience init(text: String = "", fontSize: CGFloat = 12, textColor: UIColor? = UIColor.darkGray) {
+    convenience init(text: String = "", fontSize: CGFloat = 12, textColor: UIColor? = UIColor.darkGray, textAlignment: NSTextAlignment = .left) {
         self.init()
         
         font = UIFont.systemFont(ofSize: fontSize)
