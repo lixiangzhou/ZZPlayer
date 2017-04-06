@@ -16,23 +16,25 @@ class VideoModel: NSObject, ZZPlayerItemModel {
 
 class ViewController: UIViewController {
 
+    var playerView: ZZPlayerView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         print(NSNotification.Name.AVPlayerItemDidPlayToEndTime.rawValue)
         
-        let playerView = view.zz_add(subview: ZZPlayerView(frame: CGRect(x: 20, y: 20, width: view.zz_width - 40, height: (view.zz_width - 40) * 3 / 4))) as! ZZPlayerView
+        playerView = view.zz_add(subview: ZZPlayerView(frame: CGRect(x: 20, y: 20, width: view.zz_width - 40, height: (view.zz_width - 40) * 3 / 4))) as! ZZPlayerView
         
-        playerView.playerItemModel = VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/1455782903700jy.mp4"])
+        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14562919706254.mp4"]),
+                                      VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14525705791193.mp4"])]
         playerView.backgroundColor = UIColor.black
 
 
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
+//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+//        playerView.playerItemModel = VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14525705791193.mp4"])
+//    }
 
 
 }

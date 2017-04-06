@@ -29,9 +29,10 @@ class ZZPlayerView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
-    
-    // MARK: - Properties
+    // MARK: - 属性
+    /// 最后的一个视频播放结束时是否停止播放, false 时会一直播放最后一个视频
+    var playEndStop = true
+    /// 开始播放时是否自动播放，当播放结束时是否自动重新播放，优先级低于 playEndStop
     var autoPlay: Bool = true
     fileprivate var player: ZZPlayer?
     var playerItemModel: ZZPlayerItemModel? {
@@ -57,10 +58,20 @@ class ZZPlayerView: UIView {
             
             player.playerItemModel = playerItemModel
             
-            autoPlay ? player.play() : player.pausedOfOtherReasons()
+            playPauseBtn.setImage(autoPlay ? zz_bundleImage("kr-video-player-pause") : zz_bundleImage("kr-video-player-play"), for: .normal)
         }
     }
     
+    var playerItemModels: [ZZPlayerItemModel]? {
+        didSet {
+            guard let playerItemModel = playerItemModels?.first else {
+                return
+            }
+            self.playerItemModel = playerItemModel
+        }
+    }
+    
+    // MARK: - UI 属性
     var backBtn = UIButton(imageName: zz_bundleImageName("play_back_full"))
     var titleLabel = UILabel(text: "标题", fontSize: 14, textColor: UIColor.white)
     
@@ -87,16 +98,56 @@ extension ZZPlayerView: ZZPlayerDelegate {
         
         startTimeLabel.text = String(format: "%02zd:%02zd", playTime / 60, playTime % 60)
         totalTimeLabel.text = String(format: "%02zd:%02zd", totalTime / 60, totalTime % 60)
-        
-        sliderView.value = Float(playTime) / Float(totalTime)
+        sliderView.maximumValue = Float(totalTime)
+        sliderView.value = Float(playTime)
     }
     
     func player(_ player: ZZPlayer, bufferedTime: Int, totalTime: Int) {
         progressView.progress = Float(bufferedTime) / Float(totalTime)
     }
     
-    func player(_ player: ZZPlayer, changed state: ZZPlayerState) {
-        playPauseBtn.setImage(state == .playing ? zz_bundleImage("kr-video-player-play") : zz_bundleImage("kr-video-player-pause"), for: .normal)
+    func player(_ player: ZZPlayer, willChange state: ZZPlayerState) {
+        if autoPlay == false && state == .readyToPlay {
+            DispatchQueue.main.async {
+                self.player?.pauseByUser()
+            }
+        }
+    }
+    
+    func playerDidPlayToEnd(_ player: ZZPlayer) {
+        if let playerItemModels = playerItemModels,
+            playerItemModels.count > 1 {
+            // 多个视频播放结束
+            guard let index = playerItemModels.index(where: { (item) -> Bool in
+                return item.isEqual(playerItemModel)
+            }) else {
+                playToEnd(player: player)
+                return
+            }
+            // 如果是最后一个视频，结束播放，否则播放下一个视频
+            if index >= playerItemModels.count - 1 {
+                playToEnd(player: player)
+            } else {
+                next_piece()
+            }
+        } else {    // 单个视频播放结束
+            playToEnd(player: player)
+        }
+    }
+}
+
+// MARK: - 辅助
+extension ZZPlayerView {
+    func playToEnd(player: ZZPlayer) {
+        startTimeLabel.text = "00:00"
+        player.seekTo(time: 0)
+        if playEndStop {
+            playPauseBtn.setImage(zz_bundleImage("kr-video-player-play"), for: .normal)
+            player.pauseByUser()
+        } else {
+            playPauseBtn.setImage(autoPlay ? zz_bundleImage("kr-video-player-pause") : zz_bundleImage("kr-video-player-play"), for: .normal)
+            autoPlay ? player.play() : player.pauseByUser()
+        }
     }
 }
 
@@ -110,19 +161,37 @@ extension ZZPlayerView {
         guard let player = player else {
             return
         }
+        playPauseBtn.setImage(player.isPlaying ? zz_bundleImage("kr-video-player-play") : zz_bundleImage("kr-video-player-pause"), for: .normal)
         player.isPlaying ? player.pauseByUser() : player.play()
     }
     
     func next_piece() {
-        print(#function)
+        
+        guard let playerItemModels = playerItemModels,
+            playerItemModels.count > 1 else {
+            return
+        }
+        
+        guard let index = playerItemModels.index(where: { (item) -> Bool in
+            return item.isEqual(playerItemModel)
+        }) else {
+            return
+        }
+        
+        if index < playerItemModels.count - 1 {
+            self.playerItemModel = playerItemModels[index + 1]
+        }
     }
     
     func fullscreen() {
         print(#function)
     }
     
-    func playProgress() {
-        print(#function)
+    func playProgress(sender: UISlider) {
+        guard let player = player else {
+            return
+        }
+        player.seekTo(time: sender.value)
     }
 }
 
