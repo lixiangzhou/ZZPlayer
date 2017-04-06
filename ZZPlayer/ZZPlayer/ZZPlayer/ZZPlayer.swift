@@ -36,10 +36,40 @@ enum ZZPlayerObseredKeyPath: String {
 }
 
 @objc protocol ZZPlayerDelegate {
+    
+    /// 缓冲代理方法
+    ///
+    /// - parameter player:       播放器
+    /// - parameter bufferedTime: 已缓冲好的时间
+    /// - parameter totalTime:    视频总时间
     func player(_ player: ZZPlayer, bufferedTime: Int, totalTime: Int)
+    
+    
+    /// 播放时间代理方法
+    ///
+    /// - parameter player:    播放器
+    /// - parameter playTime:  已播放时间
+    /// - parameter totalTime: 视频总时间
     func player(_ player: ZZPlayer, playTime: Int, totalTime: Int)
+    
+    
+    /// 播放结束代理方法
+    ///
+    /// - parameter player: 播放器
     func playerDidPlayToEnd(_ player: ZZPlayer)
+    
+    
+    /// 播放状态即将改变代理方法
+    ///
+    /// - parameter player: 播放器
+    /// - parameter state:  将改变的状态
     @objc optional func player(_ player: ZZPlayer, willChange state: ZZPlayerState)
+    
+    
+    /// 播放状态已改变的代理方法
+    ///
+    /// - parameter player: 播放器
+    /// - parameter state:  改变的状态
     @objc optional func player(_ player: ZZPlayer, didChanged state: ZZPlayerState)
 }
 
@@ -102,7 +132,6 @@ class ZZPlayer: UIView {
             }
             
             // 监听播放相关的状态
-//            NotificationCenter.addObserver(self, forKeyPath: NSNotification.Name.AVPlayerItemDidPlayToEndTime.rawValue, options: .new, context: nil)
             NotificationCenter.default.addObserver(self, selector: #selector(didPlayToEnd), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
             
             playerItem.addObserver(self, forKeyPath: ZZPlayerObseredKeyPath.status.rawValue, options: .new, context: nil)
@@ -189,6 +218,7 @@ extension ZZPlayer {
             }
             self.state = .playing
         }
+        print(#function)
     }
 }
 
@@ -256,11 +286,11 @@ extension ZZPlayer {
 // MARK: - Helper
 extension ZZPlayer {
     
-    func initialize() {
+    fileprivate func initialize() {
         
     }
     
-    func processPlayTime(_ playerItem: AVPlayerItem) {
+    fileprivate func processPlayTime(_ playerItem: AVPlayerItem) {
         if playerItem.seekableTimeRanges.count > 0 && playerItem.duration.timescale != 0 {
             let playTime = Int(CMTimeGetSeconds(playerItem.currentTime()))
             let totalTime = Int(CMTimeGetSeconds(playerItem.duration))
@@ -268,13 +298,11 @@ extension ZZPlayer {
         }
     }
     
-    func bufferDatas() {
+    fileprivate func bufferDatas() {
         if isBuffering {
             return
         }
         isBuffering = true
-        
-//        playerLayer?.player?.pause()
         
         DispatchQueue.main.zz_after(1) {
             guard let playerItem = self.playerLayer?.player?.currentItem else {

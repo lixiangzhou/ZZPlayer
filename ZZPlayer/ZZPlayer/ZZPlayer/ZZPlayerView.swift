@@ -72,16 +72,16 @@ class ZZPlayerView: UIView {
     }
     
     // MARK: - UI 属性
-    var backBtn = UIButton(imageName: zz_bundleImageName("play_back_full"))
-    var titleLabel = UILabel(text: "标题", fontSize: 14, textColor: UIColor.white)
+    fileprivate var backBtn = UIButton(imageName: zz_bundleImageName("play_back_full"))
+    fileprivate var titleLabel = UILabel(text: "标题", fontSize: 14, textColor: UIColor.white)
     
-    var playPauseBtn = UIButton(imageName: zz_bundleImageName("kr-video-player-play"))
-    var fullScreenBtn = UIButton(imageName: zz_bundleImageName("kr-video-player-fullscreen"))
-    var nextBtn = UIButton(imageName: zz_bundleImageName("skip_next"))
-    var progressView = UIProgressView()
-    var sliderView = UISlider()
-    var startTimeLabel = UILabel(text: "00:00", fontSize: 12, textColor: UIColor.white, textAlignment: .right)
-    var totalTimeLabel = UILabel(text: "00:00", fontSize: 12, textColor: UIColor.white)
+    fileprivate var playPauseBtn = UIButton(imageName: zz_bundleImageName("kr-video-player-play"))
+    fileprivate var fullScreenBtn = UIButton(imageName: zz_bundleImageName("kr-video-player-fullscreen"))
+    fileprivate var nextBtn = UIButton(imageName: zz_bundleImageName("skip_next"))
+    fileprivate var progressView = UIProgressView()
+    fileprivate var sliderView = UISlider()
+    fileprivate var startTimeLabel = UILabel(text: "00:00", fontSize: 12, textColor: UIColor.white, textAlignment: .right)
+    fileprivate var totalTimeLabel = UILabel(text: "00:00", fontSize: 12, textColor: UIColor.white)
     
     fileprivate var topGradientLayer: CAGradientLayer!
     fileprivate var bottomGradientLayer: CAGradientLayer!
@@ -138,7 +138,7 @@ extension ZZPlayerView: ZZPlayerDelegate {
 
 // MARK: - 辅助
 extension ZZPlayerView {
-    func playToEnd(player: ZZPlayer) {
+    fileprivate func playToEnd(player: ZZPlayer) {
         startTimeLabel.text = "00:00"
         player.seekTo(time: 0)
         if playEndStop {
@@ -151,7 +151,7 @@ extension ZZPlayerView {
     }
 }
 
-// MARK: - Action
+// MARK: - 功能方法
 extension ZZPlayerView {
     func back() {
         print(#function)
@@ -195,7 +195,7 @@ extension ZZPlayerView {
     }
 }
 
-// MARK: - set UI
+// MARK: - UI
 extension ZZPlayerView {
     fileprivate func setupUI() {
         
@@ -214,11 +214,9 @@ extension ZZPlayerView {
         sliderView.minimumTrackTintColor = UIColor(red: 45, green: 186, blue: 247)
         sliderView.maximumTrackTintColor = UIColor.clear
         sliderView.backgroundColor = UIColor.clear
-//        sliderView.value = 0.5
         
         progressView.trackTintColor = UIColor(white: 1, alpha: 0.5)
         progressView.progressTintColor = UIColor(white: 1, alpha: 0.7)
-//        progressView.progress = 0.7
         
         bottomView.addSubview(playPauseBtn)
         bottomView.addSubview(fullScreenBtn)
