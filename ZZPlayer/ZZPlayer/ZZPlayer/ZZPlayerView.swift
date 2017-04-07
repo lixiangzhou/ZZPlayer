@@ -23,6 +23,8 @@ class ZZPlayerView: UIView {
         super.init(frame: frame)
         
         setupUI()
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(orientationChanged), name: NSNotification.Name.UIApplicationDidChangeStatusBarOrientation, object: nil)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -34,7 +36,6 @@ class ZZPlayerView: UIView {
     var playEndStop = true
     /// 开始播放时是否自动播放，当播放结束时是否自动重新播放，优先级低于 playEndStop
     var autoPlay: Bool = true
-    fileprivate var player: ZZPlayer?
     var playerItemModel: ZZPlayerItemModel? {
         didSet {
             guard let playerItemModel = playerItemModel else {
@@ -70,6 +71,11 @@ class ZZPlayerView: UIView {
             self.playerItemModel = playerItemModel
         }
     }
+    
+    fileprivate var isFullScreen: Bool {
+        return UIApplication.shared.statusBarOrientation.isLandscape
+    }
+    fileprivate var player: ZZPlayer?
     
     // MARK: - UI 属性
     fileprivate var backBtn = UIButton(imageName: zz_bundleImageName("play_back_full"))
@@ -154,6 +160,12 @@ extension ZZPlayerView {
 // MARK: - 功能方法
 extension ZZPlayerView {
     func back() {
+        if isFullScreen {
+            fullscreen()
+        } else {
+            
+        }
+
         print(#function)
     }
     
@@ -184,6 +196,16 @@ extension ZZPlayerView {
     }
     
     func fullscreen() {
+        if isFullScreen {
+            UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+//            UIApplication.shared.setStatusBarHidden(false, with: .fade)
+            UIApplication.shared.statusBarOrientation = .portrait
+        } else {
+            UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
+//            UIApplication.shared.setStatusBarHidden(false, with: .fade)
+            UIApplication.shared.statusBarOrientation = .landscapeRight
+        }
+        
         print(#function)
     }
     
@@ -192,6 +214,10 @@ extension ZZPlayerView {
             return
         }
         player.seekTo(time: sender.value)
+    }
+    
+    func orientationChanged() {
+        print(#function)
     }
 }
 
@@ -233,20 +259,20 @@ extension ZZPlayerView {
         
         bottomView.snp.makeConstraints { (maker) in
             maker.bottom.left.right.equalTo(self)
-            maker.height.equalTo(40)
+            maker.height.equalTo(30)
         }
         
         playPauseBtn.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.left.equalTo(10)
-            maker.width.height.equalTo(30)
+            maker.width.height.equalTo(15)
         }
         
         nextBtn.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.left.equalTo(playPauseBtn.snp.right).offset(10)
             maker.right.equalTo(startTimeLabel.snp.left).offset(-10)
-            maker.width.height.equalTo(30)
+            maker.width.height.equalTo(15)
         }
         
         let timeLabelWidth = ceil("000:00".zz_size(withLimitWidth: 100, fontSize: 12).width)
@@ -272,13 +298,13 @@ extension ZZPlayerView {
         totalTimeLabel.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.width.equalTo(timeLabelWidth)
-            maker.right.equalTo(fullScreenBtn.snp.left).offset(-5)
+            maker.right.equalTo(fullScreenBtn.snp.left)
         }
         
         fullScreenBtn.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.right.equalTo(-10)
-            maker.width.height.equalTo(30)
+            maker.width.height.equalTo(15)
         }
     }
     

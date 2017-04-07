@@ -21,22 +21,34 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-//        print(NSNotification.Name.AVPlayerItemDidPlayToEndTime.rawValue)
+        // 1908黑 1990黑 羽毛白 ANF白   L
         
         playerView = view.zz_add(subview: ZZPlayerView(frame: CGRect(x: 20, y: 20, width: view.zz_width - 40, height: (view.zz_width - 40) * 3 / 4))) as! ZZPlayerView
+
+        playerView.snp.makeConstraints { (maker) in
+            maker.top.left.right.equalTo(self.view)
+            maker.width.equalTo(self.view.snp.width)
+            maker.height.equalTo(self.view.snp.width).multipliedBy(UIScreen.zz_width / UIScreen.zz_height)
+        }
         
-//        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14562919706254.mp4"]),
-//                                      VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14525705791193.mp4"])]
+        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14562919706254.mp4"]),
+                                      VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14525705791193.mp4"])]
+
         
-        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14562919706254.mp4"])]
-        playerView.backgroundColor = UIColor.black
+        let bView = view.zz_add(subview: UIView())
+        bView.backgroundColor = UIColor.red
+        
+        bView.snp.makeConstraints { (maker) in
+            maker.top.equalTo(UIScreen.zz_width * UIScreen.zz_width / UIScreen.zz_height)
+            maker.bottom.right.left.equalTo(self.view)
+        }
+        
+//        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14562919706254.mp4"])]
+//        playerView.backgroundColor = UIColor.black
 
 
     }
 
-//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-//        playerView.playerItemModel = VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14525705791193.mp4"])
-//    }
 
 
 }

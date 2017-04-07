@@ -93,6 +93,10 @@ class ZZPlayer: UIView {
         playerLayer?.frame = bounds
     }
     
+    deinit {
+        removeObservers()
+    }
+    
     // MARK: - 属性
     
     weak var delegate: ZZPlayerDelegate?
@@ -109,15 +113,7 @@ class ZZPlayer: UIView {
                 return
             }
             
-            // 有在播放的item, 就取消该 item 的监听操作
-            if let playerItem = playerLayer?.player?.currentItem {
-                NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
-                
-                playerItem.removeObserver(self, forKeyPath: ZZPlayerObseredKeyPath.status.rawValue)
-                playerItem.removeObserver(self, forKeyPath: ZZPlayerObseredKeyPath.loadedTimeRanges.rawValue)
-                playerItem.removeObserver(self, forKeyPath: ZZPlayerObseredKeyPath.playbackBufferEmpty.rawValue)
-                playerItem.removeObserver(self, forKeyPath: ZZPlayerObseredKeyPath.playbackLikelyToKeepUp.rawValue)
-            }
+            removeObservers()
             
             let asset = AVAsset(url: videoUrl)
             let playerItem = AVPlayerItem(asset: asset)
@@ -323,6 +319,18 @@ extension ZZPlayer {
             } else {
                 self.bufferDatas()
             }
+        }
+    }
+    
+    /// 有在播放的item, 就取消该 item 的监听操作
+    fileprivate func removeObservers() {
+        if let playerItem = playerLayer?.player?.currentItem {
+            NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+            
+            playerItem.removeObserver(self, forKeyPath: ZZPlayerObseredKeyPath.status.rawValue)
+            playerItem.removeObserver(self, forKeyPath: ZZPlayerObseredKeyPath.loadedTimeRanges.rawValue)
+            playerItem.removeObserver(self, forKeyPath: ZZPlayerObseredKeyPath.playbackBufferEmpty.rawValue)
+            playerItem.removeObserver(self, forKeyPath: ZZPlayerObseredKeyPath.playbackLikelyToKeepUp.rawValue)
         }
     }
 }
