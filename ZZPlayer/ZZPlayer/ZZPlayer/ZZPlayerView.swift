@@ -96,23 +96,35 @@ class ZZPlayerView: UIView {
     fileprivate var pausedForPanGesture = true
     
     // MARK: - UI 属性
-    fileprivate var backBtn = UIButton(imageName: zz_bundleImageName("play_back_full"))
-    fileprivate var titleLabel = UILabel(text: "标题", fontSize: 14, textColor: UIColor.white)
+    // 顶部
+    fileprivate let backBtn = UIButton(imageName: zz_bundleImageName("play_back_full"))
+    fileprivate let titleLabel = UILabel(text: "标题", fontSize: 14, textColor: UIColor.white)
     
-    fileprivate var playPauseBtn = UIButton(imageName: zz_bundleImageName("kr-video-player-play"))
-    fileprivate var fullScreenBtn = UIButton(imageName: zz_bundleImageName("kr-video-player-fullscreen"))
-    fileprivate var nextBtn = UIButton(imageName: zz_bundleImageName("skip_next"))
-    fileprivate var progressView = UIProgressView()
-    fileprivate var sliderView = UISlider()
-    fileprivate var startTimeLabel = UILabel(text: "00:00", fontSize: 12, textColor: UIColor.white, textAlignment: .right)
-    fileprivate var totalTimeLabel = UILabel(text: "00:00", fontSize: 12, textColor: UIColor.white)
+    // MARK:
+    // 底部
+    fileprivate let playPauseBtn = UIButton(imageName: zz_bundleImageName("kr-video-player-play"))
+    fileprivate let fullScreenBtn = UIButton(imageName: zz_bundleImageName("kr-video-player-fullscreen"))
+    fileprivate let nextBtn = UIButton(imageName: zz_bundleImageName("skip_next"))
+    fileprivate let progressView = UIProgressView()
+    fileprivate let sliderView = UISlider()
+    fileprivate let startTimeLabel = UILabel(text: "00:00", fontSize: 12, textColor: UIColor.white, textAlignment: .right)
+    fileprivate let totalTimeLabel = UILabel(text: "00:00", fontSize: 12, textColor: UIColor.white)
     
+    // MARK:
+    // 顶部底部的透明层
     fileprivate var topGradientLayer: CAGradientLayer!
     fileprivate var bottomGradientLayer: CAGradientLayer!
     
+    // MARK:
+    // 滑动屏幕时
+    fileprivate let panPlayingStateView = UIView()
+    fileprivate let panPlayingStateImgView = UIImageView(image: zz_bundleImage("quickback"))
+    fileprivate let panPlayingStateTimeLabel = UILabel(text: "0/0", fontSize: 12, textColor: UIColor.white, textAlignment: .center)
+    
+    
+    
+    // MARK:
     fileprivate var topView: UIView!
-    fileprivate var midLeftView: UIView!
-    fileprivate var midRightView: UIView!
     fileprivate var bottomView: UIView!
 }
 
@@ -120,8 +132,8 @@ class ZZPlayerView: UIView {
 extension ZZPlayerView: ZZPlayerDelegate {
     func player(_ player: ZZPlayer, playTime: Int, totalTime: Int) {
         
-        startTimeLabel.text = String(format: "%02zd:%02zd", playTime / 60, playTime % 60)
-        totalTimeLabel.text = String(format: "%02zd:%02zd", totalTime / 60, totalTime % 60)
+        startTimeLabel.text = transform(time: playTime)
+        totalTimeLabel.text = transform(time: totalTime)
         sliderView.maximumValue = Float(totalTime)
         sliderView.value = Float(playTime)
     }
@@ -203,6 +215,16 @@ extension ZZPlayerView {
     fileprivate func hideControlLater() {
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         perform(#selector(hideControl), with: nil, afterDelay: autoHideControlDuration)
+    }
+    
+    fileprivate func transform(time: Int) -> String {
+        var timeString = ""
+        if time >= 3600 {
+            timeString = String(format: "%02zd:%02zd:%02zd", time / 3600, time / 60, time % 60)
+        } else {
+            timeString = String(format: "%02zd:%02zd", time / 60, time % 60)
+        }
+        return timeString
     }
 }
 
@@ -288,7 +310,7 @@ extension ZZPlayerView {
         }
         
         let location = pan.location(in: self)
-        let velocity = pan.velocity(in: self)
+//        let velocity = pan.velocity(in: self)
         
         switch pan.state {
         case .began:
@@ -304,22 +326,40 @@ extension ZZPlayerView {
             self.totalTime = CGFloat(playerItem.duration.value) / CGFloat(playerItem.duration.timescale)
             self.panStartTime = CGFloat(playerItem.currentTime().value) / CGFloat(playerItem.currentTime().timescale)
             
+            UIView.animate(withDuration: 0.1, animations: {
+                self.panPlayingStateView.alpha = 1
+            })
+            
         case .changed:
             let offsetX = location.x - panStartLocation.x
             // 滑满一屏最多是总时长的20%
             let offsetTime = offsetX / self.zz_width * self.totalTime * 0.2
             
-            var time = self.panStartTime + offsetTime
+            var time = Int(self.panStartTime + offsetTime)
             if time <= 0 {
                 time = 0
             }
+            
+            if offsetX > 0 {
+                panPlayingStateImgView.image = zz_bundleImage("quickforward")
+            } else {
+                panPlayingStateImgView.image = zz_bundleImage("quickback")
+            }
+            
+            panPlayingStateTimeLabel.text = transform(time: time) + " / " + transform(time: Int(self.totalTime))
             
             player.seekTo(time: Float(time))
         default:
             if pausedForPanGesture {
                 play_pause()
             }
+            
             hideControlLater()
+            
+            UIView.animate(withDuration: 0.5, animations: {
+                self.panPlayingStateView.alpha = 0
+            })
+            
             break
         }
     }
@@ -333,6 +373,42 @@ extension ZZPlayerView {
         
         setBottomView()
 
+        setMidView()
+    }
+    
+    private func setMidView() {
+        setPanPlayingStateView()
+    }
+    
+    private func setPanPlayingStateView() {
+        addSubview(panPlayingStateView)
+        panPlayingStateView.alpha = 0
+        panPlayingStateView.backgroundColor = UIColor(white: 0, alpha: 0.75)
+        
+        panPlayingStateView.addSubview(panPlayingStateImgView)
+        panPlayingStateView.addSubview(panPlayingStateTimeLabel)
+        
+        let imgSize = panPlayingStateImgView.image!.size
+        
+        panPlayingStateView.snp.makeConstraints { (maker) in
+            maker.centerX.equalTo(self)
+            maker.centerY.equalTo(self).multipliedBy(0.8)
+            maker.width.equalTo(100)
+        }
+        
+        panPlayingStateImgView.snp.makeConstraints { (maker) in
+            maker.top.equalTo(5)
+            maker.centerX.equalTo(panPlayingStateView)
+            maker.height.equalTo(30)
+            maker.width.equalTo(imgSize.width / imgSize.height * 30)
+        }
+        
+        panPlayingStateTimeLabel.snp.makeConstraints { (maker) in
+            maker.top.equalTo(panPlayingStateImgView.snp.bottom).offset(5)
+            maker.centerX.equalTo(panPlayingStateView)
+            maker.bottom.equalTo(panPlayingStateView).offset(-5)
+            maker.width.equalTo(panPlayingStateView)
+        }
     }
     
     private func setBottomView() {
@@ -382,7 +458,7 @@ extension ZZPlayerView {
             maker.width.height.equalTo(15)
         }
         
-        let timeLabelWidth = ceil("000:00".zz_size(withLimitWidth: 100, fontSize: 12).width)
+        let timeLabelWidth = ceil("00:00:00".zz_size(withLimitWidth: 100, fontSize: 12).width)
         
         
         startTimeLabel.snp.makeConstraints { (maker) in
