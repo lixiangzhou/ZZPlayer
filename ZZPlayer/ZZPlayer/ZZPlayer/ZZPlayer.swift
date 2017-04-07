@@ -137,8 +137,24 @@ class ZZPlayer: UIView {
         }
     }
     
+    // 是否正在播放，不可用作播放状态判断
     var isPlaying: Bool {
+        guard currentPlayerItem != nil else {
+            return false
+        }
         return state == .playing
+    }
+    
+    // 是否停止播放，可用作播放状态判断
+    var isPaused: Bool {
+        guard currentPlayerItem != nil else {
+            return true
+        }
+        return state == .paused
+    }
+    
+    var currentPlayerItem: AVPlayerItem? {
+        return playerLayer?.player?.currentItem
     }
     
     fileprivate var playerLayer: AVPlayerLayer?
@@ -221,7 +237,7 @@ extension ZZPlayer {
 extension ZZPlayer {
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         
-        guard let playerItem = playerLayer?.player?.currentItem else {
+        guard let playerItem = currentPlayerItem else {
             return
         }
         
@@ -301,7 +317,7 @@ extension ZZPlayer {
         isBuffering = true
         
         DispatchQueue.main.zz_after(1) {
-            guard let playerItem = self.playerLayer?.player?.currentItem else {
+            guard let playerItem = self.currentPlayerItem else {
                 self.state = .idle
                 self.isBuffering = false
                 return
@@ -324,7 +340,7 @@ extension ZZPlayer {
     
     /// 有在播放的item, 就取消该 item 的监听操作
     fileprivate func removeObservers() {
-        if let playerItem = playerLayer?.player?.currentItem {
+        if let playerItem = currentPlayerItem {
             NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
             
             playerItem.removeObserver(self, forKeyPath: ZZPlayerObseredKeyPath.status.rawValue)

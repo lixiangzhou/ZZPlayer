@@ -25,12 +25,20 @@ class ZZPlayerView: UIView {
         setupUI()
         
         NotificationCenter.default.addObserver(self, selector: #selector(orientationChanged), name: NSNotification.Name.UIApplicationDidChangeStatusBarOrientation, object: nil)
+        
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapAction))
         addGestureRecognizer(tap)
+        
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(panAction))
+        addGestureRecognizer(pan)
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: - 属性
@@ -81,6 +89,11 @@ class ZZPlayerView: UIView {
     }
     fileprivate var player: ZZPlayer?
     fileprivate var isControlShowing = true
+    // 屏幕滑动调整播放进度相关
+    fileprivate var panStartLocation = CGPoint.zero
+    fileprivate var totalTime: CGFloat = 0
+    fileprivate var panStartTime: CGFloat = 0
+    fileprivate var pausedForPanGesture = true
     
     // MARK: - UI 属性
     fileprivate var backBtn = UIButton(imageName: zz_bundleImageName("play_back_full"))
@@ -210,7 +223,7 @@ extension ZZPlayerView {
             return
         }
 
-        if player.isPlaying {
+        if !player.isPaused {
             playPauseBtn.setImage(zz_bundleImage("kr-video-player-play"), for: .normal)
             player.pauseByUser()
         } else {
@@ -238,7 +251,7 @@ extension ZZPlayerView {
     }
     
     func fullscreen() {
-        if let player = player, player.isPlaying {
+        if let player = player, !player.isPaused {
             hideControlLater()
         }
         
@@ -266,6 +279,49 @@ extension ZZPlayerView {
     
     func tapAction() {
         isControlShowing ? hideControl() : showControl()
+    }
+    
+    func panAction(pan: UIPanGestureRecognizer) {
+        
+        guard let player = player, let playerItem = player.currentPlayerItem else {
+            return
+        }
+        
+        let location = pan.location(in: self)
+        let velocity = pan.velocity(in: self)
+        
+        switch pan.state {
+        case .began:
+            showControl()
+            NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
+            
+            if player.isPaused {
+                pausedForPanGesture = false
+            } else {
+                player.pauseByUser()
+            }
+            panStartLocation = location
+            self.totalTime = CGFloat(playerItem.duration.value) / CGFloat(playerItem.duration.timescale)
+            self.panStartTime = CGFloat(playerItem.currentTime().value) / CGFloat(playerItem.currentTime().timescale)
+            
+        case .changed:
+            let offsetX = location.x - panStartLocation.x
+            // 滑满一屏最多是总时长的20%
+            let offsetTime = offsetX / self.zz_width * self.totalTime * 0.2
+            
+            var time = self.panStartTime + offsetTime
+            if time <= 0 {
+                time = 0
+            }
+            
+            player.seekTo(time: Float(time))
+        default:
+            if pausedForPanGesture {
+                play_pause()
+            }
+            hideControlLater()
+            break
+        }
     }
 }
 
