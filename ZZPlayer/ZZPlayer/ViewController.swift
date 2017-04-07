@@ -35,14 +35,6 @@ class ViewController: UIViewController {
                                       VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14525705791193.mp4"])]
 
         
-        let bView = view.zz_add(subview: UIView())
-        bView.backgroundColor = UIColor.red
-        
-        bView.snp.makeConstraints { (maker) in
-            maker.top.equalTo(UIScreen.zz_width * UIScreen.zz_width / UIScreen.zz_height)
-            maker.bottom.right.left.equalTo(self.view)
-        }
-        
 //        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14562919706254.mp4"])]
 //        playerView.backgroundColor = UIColor.black
 

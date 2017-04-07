@@ -25,6 +25,8 @@ class ZZPlayerView: UIView {
         setupUI()
         
         NotificationCenter.default.addObserver(self, selector: #selector(orientationChanged), name: NSNotification.Name.UIApplicationDidChangeStatusBarOrientation, object: nil)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapAction))
+        addGestureRecognizer(tap)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -72,10 +74,13 @@ class ZZPlayerView: UIView {
         }
     }
     
+    var autoHideControlDuration: TimeInterval = 4
+    
     fileprivate var isFullScreen: Bool {
         return UIApplication.shared.statusBarOrientation.isLandscape
     }
     fileprivate var player: ZZPlayer?
+    fileprivate var isControlShowing = true
     
     // MARK: - UI 属性
     fileprivate var backBtn = UIButton(imageName: zz_bundleImageName("play_back_full"))
@@ -113,9 +118,13 @@ extension ZZPlayerView: ZZPlayerDelegate {
     }
     
     func player(_ player: ZZPlayer, willChange state: ZZPlayerState) {
-        if autoPlay == false && state == .readyToPlay {
-            DispatchQueue.main.async {
-                self.player?.pauseByUser()
+        if state == .readyToPlay {
+            if autoPlay == false {
+                DispatchQueue.main.async {
+                    self.player?.pauseByUser()
+                }
+            } else {
+                hideControlLater()
             }
         }
     }
@@ -155,6 +164,33 @@ extension ZZPlayerView {
             autoPlay ? player.play() : player.pauseByUser()
         }
     }
+    
+    @objc fileprivate func orientationChanged() {
+        print(#function)
+    }
+    
+    fileprivate func showControl() {
+        UIView.animate(withDuration: 0.5, animations: {
+            self.topView.alpha = 1
+            self.bottomView.alpha = 1
+            }) { (_) in
+                self.isControlShowing = true
+        }
+    }
+    
+    @objc fileprivate func hideControl() {
+        UIView.animate(withDuration: 0.5, animations: {
+            self.topView.alpha = 0
+            self.bottomView.alpha = 0
+        }) { (_) in
+            self.isControlShowing = false
+        }
+    }
+    
+    fileprivate func hideControlLater() {
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
+        perform(#selector(hideControl), with: nil, afterDelay: autoHideControlDuration)
+    }
 }
 
 // MARK: - 功能方法
@@ -173,12 +209,18 @@ extension ZZPlayerView {
         guard let player = player else {
             return
         }
-        playPauseBtn.setImage(player.isPlaying ? zz_bundleImage("kr-video-player-play") : zz_bundleImage("kr-video-player-pause"), for: .normal)
-        player.isPlaying ? player.pauseByUser() : player.play()
+
+        if player.isPlaying {
+            playPauseBtn.setImage(zz_bundleImage("kr-video-player-play"), for: .normal)
+            player.pauseByUser()
+        } else {
+            playPauseBtn.setImage(zz_bundleImage("kr-video-player-pause"), for: .normal)
+            player.play()
+            hideControlLater()
+        }
     }
     
     func next_piece() {
-        
         guard let playerItemModels = playerItemModels,
             playerItemModels.count > 1 else {
             return
@@ -196,13 +238,15 @@ extension ZZPlayerView {
     }
     
     func fullscreen() {
+        if let player = player, player.isPlaying {
+            hideControlLater()
+        }
+        
         if isFullScreen {
             UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
-//            UIApplication.shared.setStatusBarHidden(false, with: .fade)
             UIApplication.shared.statusBarOrientation = .portrait
         } else {
             UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
-//            UIApplication.shared.setStatusBarHidden(false, with: .fade)
             UIApplication.shared.statusBarOrientation = .landscapeRight
         }
         
@@ -216,8 +260,12 @@ extension ZZPlayerView {
         player.seekTo(time: sender.value)
     }
     
-    func orientationChanged() {
-        print(#function)
+    func playProgressLeave(sender: UISlider) {
+        hideControlLater()
+    }
+    
+    func tapAction() {
+        isControlShowing ? hideControl() : showControl()
     }
 }
 
@@ -256,6 +304,9 @@ extension ZZPlayerView {
         nextBtn.addTarget(self, action: #selector(next_piece), for: .touchUpInside)
         fullScreenBtn.addTarget(self, action: #selector(fullscreen), for: .touchUpInside)
         sliderView.addTarget(self, action: #selector(playProgress), for: .valueChanged)
+        sliderView.addTarget(self, action: #selector(playProgressLeave), for: [.touchUpOutside, .touchUpInside, .touchCancel])
+        
+        bottomView.addGestureRecognizer(UITapGestureRecognizer(target: nil, action: nil))
         
         bottomView.snp.makeConstraints { (maker) in
             maker.bottom.left.right.equalTo(self)
@@ -317,6 +368,8 @@ extension ZZPlayerView {
         topView.addSubview(titleLabel)
         
         backBtn.addTarget(self, action: #selector(back), for: .touchUpInside)
+        
+        topView.addGestureRecognizer(UITapGestureRecognizer(target: nil, action: nil))
         
         topView.snp.makeConstraints { (maker) in
             maker.top.left.right.equalTo(self)
