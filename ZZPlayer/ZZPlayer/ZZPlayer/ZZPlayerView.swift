@@ -37,6 +37,11 @@ class ZZPlayerView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        layoutIfNeeded()
+    }
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
@@ -116,6 +121,7 @@ class ZZPlayerView: UIView {
     fileprivate var bottomGradientLayer: CAGradientLayer!
     
     // MARK:
+    fileprivate var panHorizontal = true
     // 滑动屏幕时
     fileprivate let panPlayingStateView = UIView()
     fileprivate let panPlayingStateImgView = UIImageView(image: zz_bundleImage("quickback"))
@@ -194,6 +200,7 @@ extension ZZPlayerView {
         print(#function)
     }
     
+    // MARK: - 控制层的显示隐藏
     fileprivate func showControl() {
         UIView.animate(withDuration: 0.5, animations: {
             self.topView.alpha = 1
@@ -226,6 +233,62 @@ extension ZZPlayerView {
         }
         return timeString
     }
+    
+    // MARK: - 滑动控制播放进度
+    fileprivate func beginPanHorizontal(location: CGPoint) {
+        guard let player = player, let playerItem = player.currentPlayerItem else {
+            return
+        }
+        showControl()
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
+        
+        if player.isPaused {
+            pausedForPanGesture = false
+        } else {
+            player.pauseByUser()
+        }
+        panStartLocation = location
+        self.totalTime = CGFloat(playerItem.duration.value) / CGFloat(playerItem.duration.timescale)
+        self.panStartTime = CGFloat(playerItem.currentTime().value) / CGFloat(playerItem.currentTime().timescale)
+        
+        UIView.animate(withDuration: 0.1, animations: {
+            self.panPlayingStateView.alpha = 1
+        })
+    }
+    
+    fileprivate func panHorizontal(location: CGPoint) {
+        let offsetX = location.x - panStartLocation.x
+        // 滑满一屏最多是总时长的20%
+        let offsetTime = offsetX / self.zz_width * self.totalTime * 0.2
+        
+        var time = Int(self.panStartTime + offsetTime)
+        if time <= 0 {
+            time = 0
+        }
+        
+        if offsetX > 0 {
+            panPlayingStateImgView.image = zz_bundleImage("quickforward")
+        } else {
+            panPlayingStateImgView.image = zz_bundleImage("quickback")
+        }
+        
+        panPlayingStateTimeLabel.text = transform(time: time) + " / " + transform(time: Int(self.totalTime))
+        
+        player?.seekTo(time: Float(time))
+    }
+    
+    fileprivate func endHorizontal() {
+        if pausedForPanGesture {
+            play_pause()
+        }
+        
+        hideControlLater()
+        
+        UIView.animate(withDuration: 0.5, animations: {
+            self.panPlayingStateView.alpha = 0
+        })
+    }
+
 }
 
 // MARK: - 功能方法
@@ -304,61 +367,29 @@ extension ZZPlayerView {
     }
     
     func panAction(pan: UIPanGestureRecognizer) {
-        
-        guard let player = player, let playerItem = player.currentPlayerItem else {
-            return
-        }
-        
         let location = pan.location(in: self)
-//        let velocity = pan.velocity(in: self)
         
         switch pan.state {
         case .began:
-            showControl()
-            NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
+            let velocity = pan.velocity(in: self)
             
-            if player.isPaused {
-                pausedForPanGesture = false
+            panHorizontal = abs(velocity.x) > abs(velocity.y)
+            if panHorizontal {
+                beginPanHorizontal(location: location)
             } else {
-                player.pauseByUser()
+                
             }
-            panStartLocation = location
-            self.totalTime = CGFloat(playerItem.duration.value) / CGFloat(playerItem.duration.timescale)
-            self.panStartTime = CGFloat(playerItem.currentTime().value) / CGFloat(playerItem.currentTime().timescale)
-            
-            UIView.animate(withDuration: 0.1, animations: {
-                self.panPlayingStateView.alpha = 1
-            })
             
         case .changed:
-            let offsetX = location.x - panStartLocation.x
-            // 滑满一屏最多是总时长的20%
-            let offsetTime = offsetX / self.zz_width * self.totalTime * 0.2
-            
-            var time = Int(self.panStartTime + offsetTime)
-            if time <= 0 {
-                time = 0
-            }
-            
-            if offsetX > 0 {
-                panPlayingStateImgView.image = zz_bundleImage("quickforward")
+            if panHorizontal {
+                panHorizontal(location: location)
             } else {
-                panPlayingStateImgView.image = zz_bundleImage("quickback")
+                
             }
-            
-            panPlayingStateTimeLabel.text = transform(time: time) + " / " + transform(time: Int(self.totalTime))
-            
-            player.seekTo(time: Float(time))
         default:
-            if pausedForPanGesture {
-                play_pause()
+            if panHorizontal {
+                endHorizontal()
             }
-            
-            hideControlLater()
-            
-            UIView.animate(withDuration: 0.5, animations: {
-                self.panPlayingStateView.alpha = 0
-            })
             
             break
         }
@@ -368,6 +399,7 @@ extension ZZPlayerView {
 // MARK: - UI
 extension ZZPlayerView {
     fileprivate func setupUI() {
+        backgroundColor = UIColor.black
         
         setTopView()
         
