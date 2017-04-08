@@ -69,11 +69,7 @@ class ZZPlayerView: UIView {
                 })
             }
             
-            guard let player = player else {
-                return
-            }
-            
-            player.playerItemModel = playerItemModel
+            player!.playerItemModel = playerItemModel
             
             playPauseBtn.setImage(autoPlay ? zz_bundleImage("zz_player_pause") : zz_bundleImage("zz_player_play"), for: .normal)
         }
@@ -502,7 +498,7 @@ extension ZZPlayerView {
         bottomView.backgroundColor = UIColor.clear
         bottomGradientLayer = addGradientLayer(toView: bottomView, colors: [UIColor.clear.cgColor, UIColor(red: 0, green: 0, blue: 0, alphaValue: 0.9).cgColor])
         
-        sliderView.setThumbImage(zz_bundleImage("slider"), for: .normal)
+        sliderView.setThumbImage(zz_bundleImage("zz_player_slider"), for: .normal)
         sliderView.minimumTrackTintColor = UIColor(red: 45, green: 186, blue: 247)
         sliderView.maximumTrackTintColor = UIColor.clear
         sliderView.backgroundColor = UIColor.clear

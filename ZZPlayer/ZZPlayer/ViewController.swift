@@ -45,7 +45,7 @@ class ViewController: UIViewController {
 //                                      VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14525705791193.mp4"])]
 
         
-        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14562919706254.mp4"])]
+        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14525705791193.mp4"])]
 //        playerView.backgroundColor = UIColor.black
 
 
