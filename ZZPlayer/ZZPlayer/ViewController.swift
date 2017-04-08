@@ -8,6 +8,7 @@
 
 import UIKit
 import AVFoundation
+import MediaPlayer
 
 class VideoModel: NSObject, ZZPlayerItemModel {
     var title: String?
@@ -21,18 +22,27 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // 1908黑 1990黑 羽毛白 ANF白   L
+        view.backgroundColor = UIColor.black
+        let progressView = ZZPlayerVolumeProgressView()
+        progressView.progress = 0.5
+        view.addSubview(progressView)
         
-        playerView = view.zz_add(subview: ZZPlayerView(frame: CGRect(x: 20, y: 20, width: view.zz_width - 40, height: (view.zz_width - 40) * 3 / 4))) as! ZZPlayerView
-
-        playerView.snp.makeConstraints { (maker) in
-            maker.top.left.right.equalTo(self.view)
-            maker.width.equalTo(self.view.snp.width)
-            maker.height.equalTo(self.view.snp.width).multipliedBy(UIScreen.zz_width / UIScreen.zz_height)
-        }
+//        let pv = MPVolumeView(frame: CGRect(x: 20, y: 20, width: 100, height: 100))
+//        print(pv.subviews)
+//        pv.backgroundColor = UIColor.red
+//        view.addSubview(pv)
         
-        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14562919706254.mp4"]),
-                                      VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14525705791193.mp4"])]
+        
+//        playerView = view.zz_add(subview: ZZPlayerView(frame: CGRect(x: 20, y: 20, width: view.zz_width - 40, height: (view.zz_width - 40) * 3 / 4))) as! ZZPlayerView
+//
+//        playerView.snp.makeConstraints { (maker) in
+//            maker.top.left.right.equalTo(self.view)
+//            maker.width.equalTo(self.view.snp.width)
+//            maker.height.equalTo(self.view.snp.width).multipliedBy(UIScreen.zz_width / UIScreen.zz_height)
+//        }
+//        
+//        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14562919706254.mp4"]),
+//                                      VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14525705791193.mp4"])]
 
         
 //        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14562919706254.mp4"])]
