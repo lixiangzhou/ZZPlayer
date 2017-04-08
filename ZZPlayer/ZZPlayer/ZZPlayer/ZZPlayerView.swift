@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import MediaPlayer
 
 private func zz_bundleImage(_ imgName: String) -> UIImage? {
     return UIImage(named: zz_bundleImageName(imgName))
@@ -102,6 +103,8 @@ class ZZPlayerView: UIView {
     fileprivate var pausedForPanGesture = true
     fileprivate var panHorizontal = true
     fileprivate var panVolume = true
+    fileprivate var startVolumeValue: Float = 0
+    fileprivate var startBrightnessValue: CGFloat = 0
     
     // MARK: - UI 属性
     // 顶部
@@ -132,8 +135,16 @@ class ZZPlayerView: UIView {
     
     // MARK:
     // 滑动屏幕时 音量/亮度控制
-    fileprivate let panVolumeView = ZZPlayerProgressView()
-    fileprivate let panBrightnessView = ZZPlayerProgressView()
+    fileprivate var volumeSlider: UISlider = {
+        var slider: UISlider?
+        for sub in MPVolumeView().subviews {
+            if sub is UISlider {
+                slider = sub as? UISlider
+                break
+            }
+        }
+        return slider!
+    }()
     
     // MARK:
     fileprivate var topView: UIView!
@@ -267,6 +278,10 @@ extension ZZPlayerView {
         // 滑满一屏最多是总时长的20%
         let offsetTime = offsetX / self.zz_width * self.totalTime * 0.2
         
+        if offsetTime == CGFloat.nan {
+            return
+        }
+        
         var time = Int(self.panStartTime + offsetTime)
         if time <= 0 {
             time = 0
@@ -299,15 +314,29 @@ extension ZZPlayerView {
     // MARK: - 滑动控制音量/亮度
     fileprivate func beginPanVertical(location: CGPoint) {
         panVolume = location.x < bounds.midX
+        if panVolume {
+            startVolumeValue = volumeSlider.value
+        } else {
+            startBrightnessValue = UIScreen.zz_brightness
+        }
     }
     
     fileprivate func panVertical(location: CGPoint) {
-        let offsetY = location.y - panStartLocation.y
+        let offsetY = panStartLocation.y - location.y
         let offsetProgress = offsetY / bounds.height
+        
         if panVolume {
+            var newValue = startVolumeValue + Float(offsetProgress)
+            newValue = max(newValue, 0)
+            newValue = min(newValue, 1)
             
+            volumeSlider.value = newValue
         } else {
+            var newValue = startBrightnessValue + offsetProgress
+            newValue = max(newValue, 0)
+            newValue = min(newValue, 1)
             
+            UIScreen.zz_brightness = newValue
         }
     }
 }
@@ -389,6 +418,10 @@ extension ZZPlayerView {
     
     func panAction(pan: UIPanGestureRecognizer) {
         let location = pan.location(in: self)
+        
+        if bounds.contains(location) == false {
+            return
+        }
         
         switch pan.state {
         case .began:
@@ -501,14 +534,14 @@ extension ZZPlayerView {
         playPauseBtn.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.left.equalTo(10)
-            maker.width.height.equalTo(15)
+            maker.width.height.equalTo(25)
         }
         
         nextBtn.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.left.equalTo(playPauseBtn.snp.right).offset(10)
             maker.right.equalTo(startTimeLabel.snp.left).offset(-10)
-            maker.width.height.equalTo(15)
+            maker.width.height.equalTo(25)
         }
         
         let timeLabelWidth = ceil("00:00:00".zz_size(withLimitWidth: 100, fontSize: 12).width)
@@ -540,7 +573,7 @@ extension ZZPlayerView {
         fullScreenBtn.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.right.equalTo(-10)
-            maker.width.height.equalTo(15)
+            maker.width.height.equalTo(25)
         }
     }
     
@@ -589,116 +622,3 @@ extension ZZPlayerView {
         bottomGradientLayer.frame = bottomView.bounds
     }
 }
-
-private let progressThemeColor = UIColor(red: 45, green: 45, blue: 45)
-class ZZPlayerProgressView: UIView {
-    
-    class _ZZPlayerProgressView: UIView {
-        
-        var progress: CGFloat = 0 {
-            didSet {
-                setNeedsDisplay()
-            }
-        }
-        
-        override init(frame: CGRect) {
-            super.init(frame: CGRect(x: 0, y: 0, width: 129, height: 7))
-        }
-        
-        required init?(coder aDecoder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        override func draw(_ rect: CGRect) {
-            let progressBgPath = UIBezierPath(rect: rect)
-            progressThemeColor.setFill()
-            progressBgPath.fill()
-            
-            let count = Int(floor(progress * 16))
-            
-            let itemW: CGFloat = 7
-            let itemH: CGFloat = 5
-            for i in 0..<count {
-                let itemX = CGFloat(i) * itemW + CGFloat(i) + 1
-                let r = CGRect(x: itemX, y: 1, width: itemW, height: itemH)
-                
-                let p = UIBezierPath(rect: r)
-                UIColor.white.setFill()
-                p.fill()
-            }
-        }
-    }
-    
-    var titleLabel = UILabel(text: "", fontSize: 15, textColor: UIColor.lightGray, textAlignment: .center)
-    var iconView = UIImageView(frame: CGRect(x: 0, y: 0, width: 74, height: 63))
-    var progressView = _ZZPlayerProgressView()
-    var progress: CGFloat = 0.0 {
-        didSet {
-            progressView.progress = progress
-        }
-    }
-    
-    override init(frame: CGRect) {
-        super.init(frame: CGRect(x: 0, y: 0, width: 155, height: 155))
-        
-        backgroundColor = nil
-        
-        let bgView = zz_add(subview: UIImageView(frame: bounds)) as! UIImageView
-        bgView.image = zz_bundleImage("zz_player_brightness_bg")
-        
-        setupUI()
-        config()
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    func config() { }
-    
-    func setupUI() {
-        layer.cornerRadius = 8
-        layer.masksToBounds = true
-        
-        addSubview(titleLabel)
-        addSubview(iconView)
-        addSubview(progressView)
-        
-        iconView.image = zz_bundleImage("zz_player_brightness")
-        
-        titleLabel.frame = CGRect(x: 0, y: 10, width: bounds.width, height: 20)
-        titleLabel.textColor = progressThemeColor
-        titleLabel.font = UIFont.boldSystemFont(ofSize: 15)
-        
-        iconView.center.x = bounds.width * 0.5
-        iconView.zz_y = titleLabel.frame.maxY + 20
-        
-        progressView.zz_x = 13
-        progressView.zz_y = 132.5
-    }
-}
-
-class ZZPlayerVolumeProgressView: ZZPlayerProgressView {
-    private let silentLabel = UILabel(text: "静音", fontSize: 14, textColor: progressThemeColor, textAlignment: .center)
-    override func setupUI() {
-        super.setupUI()
-        
-        addSubview(silentLabel)
-        silentLabel.sizeToFit()
-        silentLabel.center = progressView.center
-        silentLabel.isHidden = true
-    }
-    override func config() {
-        titleLabel.text = "音量"
-        iconView.image = zz_bundleImage("zz_player_volume")
-    }
-    
-    override var progress: CGFloat {
-        didSet {
-            iconView.image = zz_bundleImage(progress > 0 ? "zz_player_volume" : "zz_player_volume_silent")
-            silentLabel.isHidden = progress > 0
-            progressView.isHidden = progress <= 0
-        }
-    }
-}
-
