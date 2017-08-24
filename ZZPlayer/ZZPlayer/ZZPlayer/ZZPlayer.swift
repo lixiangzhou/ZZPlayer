@@ -19,21 +19,12 @@ import AVFoundation
 }
 
 /// 播放时需要观察的 keypath
-enum ZZPlayerObseredKeyPath: String {
+private enum ZZPlayerObseredKeyPath: String {
     case playToEndTime = "AVPlayerItemDidPlayToEndTimeNotification"
     case status
     case loadedTimeRanges
     case playbackBufferEmpty
     case playbackLikelyToKeepUp
-}
-
-/// 播放的 model 必须遵循的协议
-@objc protocol ZZPlayerItemResource: NSObjectProtocol {
-    var title: String? { get set }
-    var videoUrlString: String? { get set }
-    @objc optional var placeholderImage: UIImage? { get set }
-    @objc optional var placeholderImageUrl: String?  { get set }
-    @objc optional var resolutions: [String: String]?  { get set }
 }
 
 @objc protocol ZZPlayerDelegate {
@@ -74,6 +65,7 @@ enum ZZPlayerObseredKeyPath: String {
     @objc optional func player(_ player: ZZPlayer, didChanged state: ZZPlayerState)
 }
 
+/// 提供最基本的播放功能
 class ZZPlayer: UIView {
     
     override init(frame: CGRect) {
