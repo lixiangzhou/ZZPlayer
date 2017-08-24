@@ -17,9 +17,9 @@ private func zz_bundleImageName(_ imgName: String) -> String {
     return "ZZPlayer.bundle/" + imgName
 }
 
-
 class ZZPlayerView: UIView {
     
+    /// 初始化
     override init(frame: CGRect) {
         super.init(frame: frame)
         
@@ -52,6 +52,7 @@ class ZZPlayerView: UIView {
     var playEndStop = true
     /// 开始播放时是否自动播放，当播放结束时是否自动重新播放，优先级低于 playEndStop
     var autoPlay: Bool = true
+    /// 播放的资源
     var playerItemModel: ZZPlayerItemModel? {
         didSet {
             guard let playerItemModel = playerItemModel else {
@@ -74,7 +75,7 @@ class ZZPlayerView: UIView {
             playPauseBtn.setImage(autoPlay ? zz_bundleImage("zz_player_pause") : zz_bundleImage("zz_player_play"), for: .normal)
         }
     }
-    
+    /// 播放的资源数组
     var playerItemModels: [ZZPlayerItemModel]? {
         didSet {
             guard let playerItemModel = playerItemModels?.first else {
@@ -84,50 +85,136 @@ class ZZPlayerView: UIView {
         }
     }
     
+    /// 自动隐藏控制条的时间
     var autoHideControlDuration: TimeInterval = 4
     
+    /// 是否全屏
     fileprivate var isFullScreen: Bool {
         return UIApplication.shared.statusBarOrientation.isLandscape
     }
+    /// 播放器
     fileprivate var player: ZZPlayer?
+    /// 是否显示控制条
     fileprivate var isControlShowing = true
     // 屏幕滑动调整播放进度相关
     fileprivate var panStartLocation = CGPoint.zero
+    
+    /// 播放总时间
     fileprivate var totalTime: CGFloat = 0
     
+    /// pan手势开始时间
     fileprivate var panStartTime: CGFloat = 0
+    
+    /// 因手势暂停播放
     fileprivate var pausedForPanGesture = true
+    
+    /// pan手势是否横向
     fileprivate var panHorizontal = true
+    
+    /// pan手势是音量
     fileprivate var panVolume = true
+    
+    /// 开始音量
     fileprivate var startVolumeValue: Float = 0
+    
+    /// 开始屏幕亮度
     fileprivate var startBrightnessValue: CGFloat = 0
     
     // MARK: - UI 属性
-    // 顶部
-    fileprivate let backBtn = UIButton(imageName: zz_bundleImageName("zz_player_play_back_full"))
-    fileprivate let titleLabel = UILabel(text: "标题", fontSize: 14, textColor: UIColor.white)
+    /// 顶部
+    fileprivate let backBtn: UIButton = {
+        let btn = UIButton()
+        btn.setImage(UIImage(named: zz_bundleImageName("zz_player_play_back_full")), for: .normal)
+        return btn
+    }()
+    
+    /// 标题
+    fileprivate let titleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Title"
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 14)
+        return label
+    }()
+    
     
     // MARK:
-    // 底部
-    fileprivate let playPauseBtn = UIButton(imageName: zz_bundleImageName("zz_player_play"))
-    fileprivate let fullScreenBtn = UIButton(imageName: zz_bundleImageName("zz_player_fullscreen"))
-    fileprivate let nextBtn = UIButton(imageName: zz_bundleImageName("zz_player_skip_next"))
+    /// 底部
+    
+    /// 播放、暂停按钮
+    fileprivate let playPauseBtn: UIButton = {
+        let btn = UIButton()
+        btn.setImage(UIImage(named: zz_bundleImageName("zz_player_play")), for: .normal)
+        return btn
+    }()
+
+    /// 全屏按钮
+    fileprivate let fullScreenBtn: UIButton = {
+        let btn = UIButton()
+        btn.setImage(UIImage(named: zz_bundleImageName("zz_player_fullscreen")), for: .normal)
+        return btn
+    }()
+    
+    /// 下一首按钮
+    fileprivate let nextBtn: UIButton = {
+        let btn = UIButton()
+        btn.setImage(UIImage(named: zz_bundleImageName("zz_player_skip_next")), for: .normal)
+        return btn
+    }()
+
+    /// 缓冲进度条
     fileprivate let progressView = UIProgressView()
+    
+    /// 播放进度条
     fileprivate let sliderView = UISlider()
-    fileprivate let startTimeLabel = UILabel(text: "00:00", fontSize: 12, textColor: UIColor.white, textAlignment: .right)
-    fileprivate let totalTimeLabel = UILabel(text: "00:00", fontSize: 12, textColor: UIColor.white)
+    
+    /// 开始时间
+    fileprivate let startTimeLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .right
+        label.text = "00:00"
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 12)
+        return label
+    }()
+    
+    /// 总时间
+    fileprivate let totalTimeLabel: UILabel = {
+        let label = UILabel()
+        label.text = "00:00"
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 12)
+        return label
+    }()
     
     // MARK:
     // 顶部底部的透明层
+    
+    /// 顶部渐变层
     fileprivate var topGradientLayer: CAGradientLayer!
+    
+    /// 底部渐变层
     fileprivate var bottomGradientLayer: CAGradientLayer!
     
     // MARK:
     
-    // 滑动屏幕时 播放进度控制
+    /// 滑动屏幕时 播放进度控制
+    
+    /// pan手势控制快进、快退的View
     fileprivate let panPlayingStateView = UIView()
+    
+    /// pan手势控制快进、快退的图标
     fileprivate let panPlayingStateImgView = UIImageView(image: zz_bundleImage("zz_player_quickback"))
-    fileprivate let panPlayingStateTimeLabel = UILabel(text: "0 / 0", fontSize: 12, textColor: UIColor.white, textAlignment: .center)
+    
+    /// pan手势控制快进、快退的时间
+    fileprivate let panPlayingStateTimeLabel: UILabel = {
+        let label = UILabel()
+        label.text = "0 / 0"
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.textAlignment = .center
+        return label
+    }()
     
     // MARK:
     // 滑动屏幕时 音量/亮度控制
@@ -143,7 +230,11 @@ class ZZPlayerView: UIView {
     }()
     
     // MARK:
+    
+    /// 顶部View
     fileprivate var topView: UIView!
+    
+    /// 底部View
     fileprivate var bottomView: UIView!
 }
 
@@ -197,6 +288,7 @@ extension ZZPlayerView: ZZPlayerDelegate {
 
 // MARK: - 辅助
 extension ZZPlayerView {
+    /// 播放结束时
     fileprivate func playToEnd(player: ZZPlayer) {
         startTimeLabel.text = "00:00"
         player.seekTo(time: 0)
@@ -223,6 +315,7 @@ extension ZZPlayerView {
         }
     }
     
+    /// 隐藏控制条
     @objc fileprivate func hideControl() {
         UIView.animate(withDuration: 0.5, animations: {
             self.topView.alpha = 0
@@ -232,11 +325,14 @@ extension ZZPlayerView {
         }
     }
     
+    /// 稍后隐藏控制条
     fileprivate func hideControlLater() {
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         perform(#selector(hideControl), with: nil, afterDelay: autoHideControlDuration)
     }
     
+    
+    /// 转换时间
     fileprivate func transform(time: Int) -> String {
         var timeString = ""
         if time >= 3600 {
@@ -248,6 +344,8 @@ extension ZZPlayerView {
     }
     
     // MARK: - 滑动控制播放进度
+    
+    /// 开始横向手势
     fileprivate func beginPanHorizontal(location: CGPoint) {
         guard let player = player, let playerItem = player.currentPlayerItem else {
             return
@@ -258,21 +356,23 @@ extension ZZPlayerView {
         if player.isPaused {
             pausedForPanGesture = false
         } else {
+            pausedForPanGesture = true
             player.pauseByUser()
         }
         
-        self.totalTime = CGFloat(playerItem.duration.value) / CGFloat(playerItem.duration.timescale)
-        self.panStartTime = CGFloat(playerItem.currentTime().value) / CGFloat(playerItem.currentTime().timescale)
-        
+        self.totalTime = CGFloat(CMTimeGetSeconds(playerItem.duration))
+        self.panStartTime = CGFloat(CMTimeGetSeconds(playerItem.currentTime()))
         UIView.animate(withDuration: 0.1, animations: {
             self.panPlayingStateView.alpha = 1
         })
     }
     
+    
+    /// 处理横向手势
     fileprivate func panHorizontal(location: CGPoint) {
         let offsetX = location.x - panStartLocation.x
         // 滑满一屏最多是总时长的20%
-        let offsetTime = offsetX / self.zz_width * self.totalTime * 0.2
+        let offsetTime = offsetX / self.bounds.width * self.totalTime * 0.2
         
         if offsetTime == CGFloat.nan {
             return
@@ -294,6 +394,8 @@ extension ZZPlayerView {
         player?.seekTo(time: Float(time))
     }
     
+    
+    /// 横向手势结束
     fileprivate func endHorizontal() {
         if pausedForPanGesture {
             play_pause()
@@ -308,15 +410,18 @@ extension ZZPlayerView {
 
     
     // MARK: - 滑动控制音量/亮度
+    
+    /// 开始纵向手势
     fileprivate func beginPanVertical(location: CGPoint) {
         panVolume = location.x < bounds.midX
         if panVolume {
             startVolumeValue = volumeSlider.value
         } else {
-            startBrightnessValue = UIScreen.zz_brightness
+            startBrightnessValue = UIScreen.main.brightness
         }
     }
     
+    /// 处理纵向手势
     fileprivate func panVertical(location: CGPoint) {
         let offsetY = panStartLocation.y - location.y
         let offsetProgress = offsetY / bounds.height
@@ -332,13 +437,14 @@ extension ZZPlayerView {
             newValue = max(newValue, 0)
             newValue = min(newValue, 1)
             
-            UIScreen.zz_brightness = newValue
+            UIScreen.main.brightness = newValue
         }
     }
 }
 
 // MARK: - 功能方法
 extension ZZPlayerView {
+    // 返回
     func back() {
         if isFullScreen {
             fullscreen()
@@ -349,6 +455,8 @@ extension ZZPlayerView {
         print(#function)
     }
     
+    
+    /// 暂停、播放
     func play_pause() {
         guard let player = player else {
             return
@@ -364,6 +472,8 @@ extension ZZPlayerView {
         }
     }
     
+    
+    /// 下一首
     func next_piece() {
         guard let playerItemModels = playerItemModels,
             playerItemModels.count > 1 else {
@@ -381,6 +491,8 @@ extension ZZPlayerView {
         }
     }
     
+    
+    /// 全屏
     func fullscreen() {
         if let player = player, !player.isPaused {
             hideControlLater()
@@ -397,6 +509,8 @@ extension ZZPlayerView {
         print(#function)
     }
     
+    
+    /// 处理进度
     func playProgress(sender: UISlider) {
         guard let player = player else {
             return
@@ -404,14 +518,20 @@ extension ZZPlayerView {
         player.seekTo(time: sender.value)
     }
     
+    
+    /// 进度结束
     func playProgressLeave(sender: UISlider) {
         hideControlLater()
     }
     
+    
+    /// 点击手势，用来控制控制条的显示隐藏
     func tapAction() {
         isControlShowing ? hideControl() : showControl()
     }
     
+    
+    /// 滑动手势，用来控制音量、亮度、快进、快退
     func panAction(pan: UIPanGestureRecognizer) {
         let location = pan.location(in: self)
         
@@ -494,12 +614,14 @@ extension ZZPlayerView {
     }
     
     private func setBottomView() {
-        bottomView = zz_add(subview: UIView())
+        bottomView = UIView()
+        addSubview(bottomView)
         bottomView.backgroundColor = UIColor.clear
-        bottomGradientLayer = addGradientLayer(toView: bottomView, colors: [UIColor.clear.cgColor, UIColor(red: 0, green: 0, blue: 0, alphaValue: 0.9).cgColor])
+        
+        bottomGradientLayer = addGradientLayer(toView: bottomView, colors: [UIColor.clear.cgColor, UIColor(red: 0, green: 0, blue: 0, alpha: 0.9).cgColor])
         
         sliderView.setThumbImage(zz_bundleImage("zz_player_slider"), for: .normal)
-        sliderView.minimumTrackTintColor = UIColor(red: 45, green: 186, blue: 247)
+        sliderView.minimumTrackTintColor = UIColor(red: 45 / 255.0, green: 186 / 255.0, blue: 247 / 255.0, alpha: 1)
         sliderView.maximumTrackTintColor = UIColor.clear
         sliderView.backgroundColor = UIColor.clear
         
@@ -536,21 +658,22 @@ extension ZZPlayerView {
         nextBtn.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.left.equalTo(playPauseBtn.snp.right).offset(10)
-            maker.right.equalTo(startTimeLabel.snp.left).offset(-10)
             maker.width.height.equalTo(25)
         }
         
-        let timeLabelWidth = ceil("00:00:00".zz_size(withLimitWidth: 100, fontSize: 12).width)
+        
+        let timeLabelWidth = ceil(("00:00:00" as NSString).boundingRect(with: CGSize(width: 100, height: 100), options: [], attributes: [NSFontAttributeName: UIFont.systemFont(ofSize: 12)], context: nil).size.width)
         
         
         startTimeLabel.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
             maker.width.equalTo(timeLabelWidth)
-            maker.right.equalTo(sliderView.snp.left).offset(-5)
+            maker.left.equalTo(nextBtn.snp.right)
         }
         
         sliderView.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView)
+            maker.left.equalTo(nextBtn.snp.right).offset(timeLabelWidth + 10)
             maker.right.equalTo(totalTimeLabel.snp.left).offset(-5)
         }
         
@@ -574,9 +697,10 @@ extension ZZPlayerView {
     }
     
     private func setTopView() {
-        topView = zz_add(subview: UIView())
+        topView = UIView()
+        addSubview(topView)
         topView.backgroundColor = UIColor.clear
-        topGradientLayer = addGradientLayer(toView: topView, colors: [UIColor(red: 0, green: 0, blue: 0, alphaValue: 0.9).cgColor, UIColor.clear.cgColor])
+        topGradientLayer = addGradientLayer(toView: topView, colors: [UIColor(red: 0, green: 0, blue: 0, alpha: 0.9).cgColor, UIColor.clear.cgColor])
         
         topView.addSubview(backBtn)
         topView.addSubview(titleLabel)
@@ -611,6 +735,8 @@ extension ZZPlayerView {
         return gradientLayer
     }
     
+    
+    /// 布局渐变层
     override func layoutSubviews() {
         super.layoutSubviews()
         

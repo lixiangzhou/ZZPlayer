@@ -13,6 +13,11 @@ import MediaPlayer
 class VideoModel: NSObject, ZZPlayerItemModel {
     var title: String?
     var videoUrlString: String?
+    
+    init(title: String, videoUrlString: String) {
+        self.title = title
+        self.videoUrlString = videoUrlString
+    }
 }
 
 class ViewController: UIViewController {
@@ -33,19 +38,20 @@ class ViewController: UIViewController {
 //        view.addSubview(pv)
         
         
-        playerView = view.zz_add(subview: ZZPlayerView(frame: CGRect(x: 20, y: 20, width: view.zz_width - 40, height: (view.zz_width - 40) * 3 / 4))) as! ZZPlayerView
+        playerView = ZZPlayerView(frame: CGRect(x: 20, y: 20, width: view.frame.width - 40, height: (view.frame.height - 40) * 3 / 4))
+        view.addSubview(playerView)
 
         playerView.snp.makeConstraints { (maker) in
             maker.top.left.right.equalTo(self.view)
             maker.width.equalTo(self.view.snp.width)
-            maker.height.equalTo(self.view.snp.width).multipliedBy(UIScreen.zz_width / UIScreen.zz_height)
+            maker.height.equalTo(self.view.snp.width).multipliedBy(UIScreen.main.bounds.width / UIScreen.main.bounds.height)
         }
         
 //        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14562919706254.mp4"]),
 //                                      VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14525705791193.mp4"])]
 
         
-        playerView.playerItemModels = [VideoModel(dict: ["title": "测试标题", "videoUrlString": "http://baobab.wdjcdn.com/14525705791193.mp4"])]
+        playerView.playerItemModels = [VideoModel(title: "测试标题", videoUrlString: "http://baobab.wdjcdn.com/14525705791193.mp4")]
 //        playerView.backgroundColor = UIColor.black
 
 

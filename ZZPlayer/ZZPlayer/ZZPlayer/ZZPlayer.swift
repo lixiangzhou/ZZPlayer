@@ -18,6 +18,7 @@ import AVFoundation
     case failed             // 失败
 }
 
+/// 播放时需要观察的 keypath
 enum ZZPlayerObseredKeyPath: String {
     case playToEndTime = "AVPlayerItemDidPlayToEndTimeNotification"
     case status
@@ -101,6 +102,7 @@ class ZZPlayer: UIView {
     
     weak var delegate: ZZPlayerDelegate?
     
+    /// 播放资源
     var playerItemModel: ZZPlayerItemModel? {
         didSet {
 
@@ -122,7 +124,6 @@ class ZZPlayer: UIView {
             if playerLayer == nil {
                 playerLayer = AVPlayerLayer(player: player)
                 layer.insertSublayer(playerLayer!, at: 0)
-                
             } else {
                 playerLayer?.player = player
             }
@@ -141,7 +142,7 @@ class ZZPlayer: UIView {
         }
     }
     
-    // 是否正在播放，不可用作播放状态判断
+    /// 是否正在播放，不可用作播放状态判断
     var isPlaying: Bool {
         if currentPlayerItem != nil {
             return state == .playing
@@ -149,7 +150,7 @@ class ZZPlayer: UIView {
         return false
     }
     
-    // 是否停止播放，可用作播放状态判断
+    /// 是否停止播放，可用作播放状态判断
     var isPaused: Bool {
         if currentPlayerItem != nil {
             return state == .paused
@@ -157,14 +158,18 @@ class ZZPlayer: UIView {
         return true
     }
     
+    /// 当前播放的Item
     var currentPlayerItem: AVPlayerItem? {
         return playerLayer?.player?.currentItem
     }
     
+    /// 播放层
     fileprivate var playerLayer: AVPlayerLayer?
+    
     /// 是否由用户点击暂停还是由其他的原因（如没有缓冲好数据）
     fileprivate var pausedByUser = false
     
+    /// 播放状态
     fileprivate var state: ZZPlayerState = .idle {
         didSet {
             guard let playerLayer = playerLayer,
@@ -199,29 +204,37 @@ class ZZPlayer: UIView {
         }
     }
     
+    /// 是否在缓冲
     fileprivate var isBuffering = false
 }
 
 
 // MARK: - Main feature
 extension ZZPlayer {
+    
+    /// 用户手动停止播放
     func pauseByUser() {
         pausedByUser = true
         state = .paused
         print(#function)
     }
     
+    /// 其他原因停止播放
     func pausedByOtherReasons() {
         pausedByUser = false
         state = .paused
         print(#function)
     }
     
+    /// 播放
     func play() {
         state = .playing
         print(#function)
     }
     
+    /// 从 time 秒开始播放
+    ///
+    /// - Parameter time: 播放的时间
     func seekTo(time: Float) {
         playerLayer?.player?.seek(to: CMTime(value: CMTimeValue(time), timescale: 1), toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero) {_ in 
             if self.pausedByUser {
@@ -233,7 +246,9 @@ extension ZZPlayer {
     }
 }
 
+// MARK: - Observer
 extension ZZPlayer {
+    
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         
         guard let playerItem = currentPlayerItem else {
@@ -257,7 +272,6 @@ extension ZZPlayer {
             case .unknown:
                 state = .idle
             }
-            
             
             playerLayer?.player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC)), queue: nil, using: { time in
                 self.processPlayTime(playerItem)
@@ -318,7 +332,7 @@ extension ZZPlayer {
         }
         isBuffering = true
         
-        DispatchQueue.main.zz_after(1) {
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1) { 
             guard let playerItem = self.currentPlayerItem else {
                 self.state = .idle
                 self.isBuffering = false
