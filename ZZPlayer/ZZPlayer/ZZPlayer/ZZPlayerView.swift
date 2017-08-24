@@ -53,13 +53,13 @@ class ZZPlayerView: UIView {
     /// 开始播放时是否自动播放，当播放结束时是否自动重新播放，优先级低于 playEndStop
     var autoPlay: Bool = true
     /// 播放的资源
-    var playerItemModel: ZZPlayerItemModel? {
+    var playerItemResource: ZZPlayerItemResource? {
         didSet {
-            guard let playerItemModel = playerItemModel else {
+            guard let playerItemResource = playerItemResource else {
                 return
             }
             
-            titleLabel.text = playerItemModel.title
+            titleLabel.text = playerItemResource.title
             
             if player == nil {
                 player = ZZPlayer()
@@ -70,18 +70,18 @@ class ZZPlayerView: UIView {
                 })
             }
             
-            player!.playerItemModel = playerItemModel
+            player!.playerItemResource = playerItemResource
             
             playPauseBtn.setImage(autoPlay ? zz_bundleImage("zz_player_pause") : zz_bundleImage("zz_player_play"), for: .normal)
         }
     }
     /// 播放的资源数组
-    var playerItemModels: [ZZPlayerItemModel]? {
+    var playerItemResources: [ZZPlayerItemResource]? {
         didSet {
-            guard let playerItemModel = playerItemModels?.first else {
+            guard let playerItemResource = playerItemResources?.first else {
                 return
             }
-            self.playerItemModel = playerItemModel
+            self.playerItemResource = playerItemResource
         }
     }
     
@@ -265,17 +265,17 @@ extension ZZPlayerView: ZZPlayerDelegate {
     }
     
     func playerDidPlayToEnd(_ player: ZZPlayer) {
-        if let playerItemModels = playerItemModels,
-            playerItemModels.count > 1 {
+        if let playerItemResources = playerItemResources,
+            playerItemResources.count > 1 {
             // 多个视频播放结束
-            guard let index = playerItemModels.index(where: { (item) -> Bool in
-                return item.isEqual(playerItemModel)
+            guard let index = playerItemResources.index(where: { (item) -> Bool in
+                return item.isEqual(playerItemResource)
             }) else {
                 playToEnd(player: player)
                 return
             }
             // 如果是最后一个视频，结束播放，否则播放下一个视频
-            if index >= playerItemModels.count - 1 {
+            if index >= playerItemResources.count - 1 {
                 playToEnd(player: player)
             } else {
                 next_piece()
@@ -475,19 +475,19 @@ extension ZZPlayerView {
     
     /// 下一首
     func next_piece() {
-        guard let playerItemModels = playerItemModels,
-            playerItemModels.count > 1 else {
+        guard let playerItemResources = playerItemResources,
+            playerItemResources.count > 1 else {
             return
         }
         
-        guard let index = playerItemModels.index(where: { (item) -> Bool in
-            return item.isEqual(playerItemModel)
+        guard let index = playerItemResources.index(where: { (item) -> Bool in
+            return item.isEqual(playerItemResource)
         }) else {
             return
         }
         
-        if index < playerItemModels.count - 1 {
-            self.playerItemModel = playerItemModels[index + 1]
+        if index < playerItemResources.count - 1 {
+            self.playerItemResource = playerItemResources[index + 1]
         }
     }
     
@@ -527,7 +527,7 @@ extension ZZPlayerView {
     
     /// 点击手势，用来控制控制条的显示隐藏
     func tapAction() {
-        isControlShowing ? hideControl() : showControl()
+        isControlShowing ? hideControlLater() : showControl()
     }
     
     

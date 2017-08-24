@@ -28,7 +28,7 @@ enum ZZPlayerObseredKeyPath: String {
 }
 
 /// 播放的 model 必须遵循的协议
-@objc protocol ZZPlayerItemModel: NSObjectProtocol {
+@objc protocol ZZPlayerItemResource: NSObjectProtocol {
     var title: String? { get set }
     var videoUrlString: String? { get set }
     @objc optional var placeholderImage: UIImage? { get set }
@@ -103,14 +103,14 @@ class ZZPlayer: UIView {
     weak var delegate: ZZPlayerDelegate?
     
     /// 播放资源
-    var playerItemModel: ZZPlayerItemModel? {
+    var playerItemResource: ZZPlayerItemResource? {
         didSet {
 
-            if playerItemModel == nil || playerItemModel!.isEqual(oldValue) {
+            if playerItemResource == nil || playerItemResource!.isEqual(oldValue) {
                 return
             }
             
-            guard let videoUrlString = playerItemModel?.videoUrlString,
+            guard let videoUrlString = playerItemResource?.videoUrlString,
                 let videoUrl = URL(string: videoUrlString) else {
                 return
             }
