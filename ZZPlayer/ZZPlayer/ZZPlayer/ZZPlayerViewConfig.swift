@@ -62,13 +62,15 @@ struct ZZPlayerViewBottomConfig {
     var hideNext = true
     
     /// 全屏按钮设置
-    var fullScreen = ZZPlayerViewTopConfigButton(image:  zz_bundleImage("zz_player_fullscreen"),
+    var fullScreen = ZZPlayerViewTopConfigButton(image: zz_bundleImage("zz_player_fullscreen"),
                                                     leftPadding: 5,
                                                     rightPadding: 10,
                                                     size: CGSize(width: 25, height: 25),
                                                     offsetY: 0)
-    
+    /// 全屏图标
     var fullScreenImg = zz_bundleImage("zz_player_fullscreen")
+    
+    /// 退出全屏图标
     var fullScreenBackImg = zz_bundleImage("zz_player_shrinkscreen")
     
     /// 开始时间（实时时间）设置
