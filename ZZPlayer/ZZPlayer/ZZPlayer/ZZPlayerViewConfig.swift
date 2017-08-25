@@ -59,6 +59,7 @@ struct ZZPlayerViewBottomConfig {
                                               rightPadding: 0,
                                               size: CGSize(width: 25, height: 25),
                                               offsetY: 0)
+    var hideNext = true
     
     /// 全屏按钮设置
     var fullScreen = ZZPlayerViewTopConfigButton(image:  zz_bundleImage("zz_player_fullscreen"),

@@ -607,6 +607,7 @@ extension ZZPlayerView {
         
         nextBtn = UIButton()
         nextBtn.setImage(config.bottom.next.image, for: .normal)
+        nextBtn.isHidden = config.bottom.hideNext
         
         fullScreenBtn = UIButton()
         fullScreenBtn.setImage(config.bottom.fullScreen.image, for: .normal)
@@ -662,21 +663,30 @@ extension ZZPlayerView {
             maker.size.equalTo(config.bottom.playPause.size)
         }
         
-        nextBtn.snp.makeConstraints { (maker) in
-            maker.centerY.equalTo(bottomView).offset(config.bottom.next.offsetY)
-            maker.left.equalTo(playPauseBtn.snp.right).offset(config.bottom.next.leftPadding)
-            maker.size.equalTo(config.bottom.next.size)
+        if config.bottom.hideNext {
+            startTimeLabel.snp.makeConstraints { (maker) in
+                maker.centerY.equalTo(bottomView).offset(config.bottom.startTime.offsetY)
+                maker.width.equalTo(timeWidth(font: config.bottom.startTime.font))
+                maker.left.equalTo(playPauseBtn.snp.right).offset(config.bottom.startTime.leftPadding)
+            }
+        } else {
+            nextBtn.snp.makeConstraints { (maker) in
+                maker.centerY.equalTo(bottomView).offset(config.bottom.next.offsetY)
+                maker.left.equalTo(playPauseBtn.snp.right).offset(config.bottom.next.leftPadding)
+                maker.size.equalTo(config.bottom.next.size)
+            }
+            
+            startTimeLabel.snp.makeConstraints { (maker) in
+                maker.centerY.equalTo(bottomView).offset(config.bottom.startTime.offsetY)
+                maker.width.equalTo(timeWidth(font: config.bottom.startTime.font))
+                maker.left.equalTo(playPauseBtn.snp.right).offset(config.bottom.startTime.leftPadding + config.bottom.next.leftPadding + config.bottom.next.size.width)
+            }
         }
         
-        startTimeLabel.snp.makeConstraints { (maker) in
-            maker.centerY.equalTo(bottomView).offset(config.bottom.startTime.offsetY)
-            maker.width.equalTo(timeWidth(font: config.bottom.startTime.font))
-            maker.left.equalTo(nextBtn.snp.right).offset(config.bottom.startTime.leftPadding)
-        }
         
         sliderView.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView).offset(config.bottom.slider.offsetY)
-            maker.left.equalTo(nextBtn.snp.right).offset(timeWidth(font: config.bottom.startTime.font) + config.bottom.slider.leftPadding)
+            maker.left.equalTo(startTimeLabel.snp.right).offset(config.bottom.slider.leftPadding)
             maker.right.equalTo(totalTimeLabel.snp.left).offset(-config.bottom.slider.rightPadding)
         }
         
@@ -836,6 +846,7 @@ extension ZZPlayerView {
         }
         
         nextBtn.setImage(config.bottom.next.image, for: .normal)
+        nextBtn.isHidden = config.bottom.hideNext
 
         fullScreenBtn.setImage(config.bottom.fullScreen.image, for: .normal)
 
@@ -864,21 +875,29 @@ extension ZZPlayerView {
             maker.size.equalTo(config.bottom.playPause.size)
         }
         
-        nextBtn.snp.updateConstraints { (maker) in
-            maker.centerY.equalTo(bottomView).offset(config.bottom.next.offsetY)
-            maker.left.equalTo(playPauseBtn.snp.right).offset(config.bottom.next.leftPadding)
-            maker.size.equalTo(config.bottom.next.size)
-        }
-        
-        startTimeLabel.snp.updateConstraints { (maker) in
-            maker.centerY.equalTo(bottomView).offset(config.bottom.startTime.offsetY)
-            maker.width.equalTo(timeWidth(font: config.bottom.startTime.font))
-            maker.left.equalTo(nextBtn.snp.right).offset(config.bottom.startTime.leftPadding)
+        if config.bottom.hideNext {
+            startTimeLabel.snp.remakeConstraints { (maker) in
+                maker.centerY.equalTo(bottomView).offset(config.bottom.startTime.offsetY)
+                maker.width.equalTo(timeWidth(font: config.bottom.startTime.font))
+                maker.left.equalTo(playPauseBtn.snp.right).offset(config.bottom.startTime.leftPadding)
+            }
+        } else {
+            nextBtn.snp.remakeConstraints { (maker) in
+                maker.centerY.equalTo(bottomView).offset(config.bottom.next.offsetY)
+                maker.left.equalTo(playPauseBtn.snp.right).offset(config.bottom.next.leftPadding)
+                maker.size.equalTo(config.bottom.next.size)
+            }
+            
+            startTimeLabel.snp.remakeConstraints { (maker) in
+                maker.centerY.equalTo(bottomView).offset(config.bottom.startTime.offsetY)
+                maker.width.equalTo(timeWidth(font: config.bottom.startTime.font))
+                maker.left.equalTo(playPauseBtn.snp.right).offset(config.bottom.startTime.leftPadding + config.bottom.next.leftPadding + config.bottom.next.size.width)
+            }
         }
         
         sliderView.snp.updateConstraints { (maker) in
             maker.centerY.equalTo(bottomView).offset(config.bottom.slider.offsetY)
-            maker.left.equalTo(nextBtn.snp.right).offset(timeWidth(font: config.bottom.startTime.font) + config.bottom.slider.leftPadding)
+            maker.left.equalTo(startTimeLabel.snp.right).offset(config.bottom.slider.leftPadding)
             maker.right.equalTo(totalTimeLabel.snp.left).offset(-config.bottom.slider.rightPadding)
         }
         

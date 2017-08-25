@@ -33,7 +33,7 @@ class ViewController: UIViewController {
         config.top.height = 60
         config.top.icon.size = CGSize(width: 50, height: 50)
         config.bottom.height = 55
-        
+        config.bottom.hideNext = false
         playerView.configHorizontal = config
         playerView.autoPlay = false
         view.addSubview(playerView)
