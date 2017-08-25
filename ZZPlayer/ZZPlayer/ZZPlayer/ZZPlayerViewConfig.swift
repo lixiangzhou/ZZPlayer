@@ -24,7 +24,7 @@ struct ZZPlayerViewTopConfig {
                                            offsetY: 0)
     
     /// 左边图标设置
-    var leftIcon = ZZPlayerViewTopConfigButton(image:  zz_bundleImage("zz_player_play_back_full"),
+    var icon = ZZPlayerViewTopConfigButton(image: zz_bundleImage("zz_player_play_back_full"),
                                                leftPadding: 5,
                                                rightPadding: 20,
                                                size: CGSize(width: 30, height: 30),
@@ -35,58 +35,73 @@ struct ZZPlayerViewBottomConfig {
     var hidden = false
     var height: CGFloat = 30
     
+    /// 背景
     var background = ZZPlayerViewTopConfigBackground.gradientLayer(UIColor.clear, UIColor(red: 0, green: 0, blue: 0, alpha: 0.9))
     
-    var playPauseBtn = ZZPlayerViewTopConfigButton(image: zz_bundleImage("zz_player_play"),
+    /// 暂停、播放按钮设置
+    var playPause = ZZPlayerViewTopConfigButton(image: zz_bundleImage("zz_player_play"),
                                                    leftPadding: 10,
                                                    rightPadding: 10,
                                                    size: CGSize(width: 25,
                                                                 height: 25),
                                                    offsetY: 0)
-    var playPauseBtnPlayImg = zz_bundleImage("zz_player_play")
-    var playPauseBtnPauseImg = zz_bundleImage("zz_player_pause")
+    
+    /// 播放图标
+    var playPausePlayImg = zz_bundleImage("zz_player_play")
+    
+    /// 暂停图标
+    var playPausePauseImg = zz_bundleImage("zz_player_pause")
  
-    var nextBtn = ZZPlayerViewTopConfigButton(image: zz_bundleImage("zz_player_skip_next"),
+    
+    /// 下一首按钮设置
+    var next = ZZPlayerViewTopConfigButton(image: zz_bundleImage("zz_player_skip_next"),
                                               leftPadding: 10,
                                               rightPadding: 0,
                                               size: CGSize(width: 25, height: 25),
                                               offsetY: 0)
     
-    var fullScreenBtn = ZZPlayerViewTopConfigButton(image:  zz_bundleImage("zz_player_fullscreen"),
+    /// 全屏按钮设置
+    var fullScreen = ZZPlayerViewTopConfigButton(image:  zz_bundleImage("zz_player_fullscreen"),
                                                     leftPadding: 5,
                                                     rightPadding: 10,
                                                     size: CGSize(width: 25, height: 25),
                                                     offsetY: 0)
     
-    var startTimeLabel = ZZPlayerViewTopConfigLabel(font: UIFont.systemFont(ofSize: 12),
+    /// 开始时间（实时时间）设置
+    var startTime = ZZPlayerViewTopConfigLabel(font: UIFont.systemFont(ofSize: 12),
                                                     color: .white,
                                                     leftPadding: 0,
                                                     rightPadding: 5,
                                                     offsetY: 0)
     
-    var totalTimeLabel = ZZPlayerViewTopConfigLabel(font: UIFont.systemFont(ofSize: 12),
+    /// 总时间设置
+    var totalTime = ZZPlayerViewTopConfigLabel(font: UIFont.systemFont(ofSize: 12),
                                                     color: .white,
                                                     leftPadding: 5,
                                                     rightPadding: 0,
                                                     offsetY: 0)
     
+    /// 缓存进度设置
     var progressView = ZZPlayerViewTopConfigProgress(trackTintColor: UIColor(white: 1, alpha: 0.5),
                                                      progressTintColor: UIColor(white: 1, alpha: 0.7),
                                                      height: 2)
     
+    /// 播放进度设置
     var slider = ZZPlayerViewTopConfigSlider(thumbImage: zz_bundleImage("zz_player_slider"),
-                                             minimumTrackTintColor: UIColor(red: 45 / 255.0, green: 186 / 255.0, blue: 247 / 255.0, alpha: 1), maximumTrackTintColor: UIColor.clear, leftPadding: 5, rightPadding: 0, offsetY: 0)
+                                             minimumTrackTintColor: UIColor(red: 45 / 255.0, green: 186 / 255.0, blue: 247 / 255.0, alpha: 1), maximumTrackTintColor: UIColor.clear, leftPadding: 5, rightPadding: 5, offsetY: 0)
 }
 
 struct ZZPlayerViewCenterConfig {
     var width: CGFloat = 100
     
+    /// 时间设置
     var timeFont = UIFont.systemFont(ofSize: 12)
     var timeColor = UIColor.white
     var timeTopInset: CGFloat = 5
     var timeBottomInset: CGFloat = 5
     
-    var iconImage = zz_bundleImage("zz_player_quickback")
+    
+    /// 快进、快退设置
     var iconTopInset: CGFloat = 5
     var iconSize = CGSize(width: zz_bundleImage("zz_player_quickback")!.size.width / zz_bundleImage("zz_player_quickback")!.size.height * 30,
                           height: 30)
@@ -96,9 +111,14 @@ struct ZZPlayerViewCenterConfig {
 }
 
 struct ZZPlayerViewConfig {
-    let top = ZZPlayerViewTopConfig()
-    let bottom = ZZPlayerViewBottomConfig()
-    let center = ZZPlayerViewCenterConfig()
+    var top = ZZPlayerViewTopConfig()
+    var bottom = ZZPlayerViewBottomConfig()
+    var center = ZZPlayerViewCenterConfig()
+    
+    
+    /// 控制层显示时长设置
+    var autoHideControlDuration: TimeInterval = 4
+    var animateDuration: TimeInterval = 0.5
 }
 
 enum ZZPlayerViewTopConfigBackground {

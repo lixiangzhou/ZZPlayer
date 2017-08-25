@@ -28,6 +28,14 @@ class ViewController: UIViewController {
         
         
         playerView = ZZPlayerView(frame: CGRect(x: 20, y: 20, width: view.frame.width - 40, height: (view.frame.height - 40) * 3 / 4))
+        var config = playerView.configHorizontal
+        config.top.title.font = UIFont.systemFont(ofSize: 16)
+        config.top.height = 60
+        config.top.icon.size = CGSize(width: 50, height: 50)
+        config.bottom.height = 55
+        
+        playerView.configHorizontal = config
+        playerView.autoPlay = false
         view.addSubview(playerView)
 
         playerView.snp.makeConstraints { (maker) in

@@ -42,7 +42,15 @@ class ZZPlayerView: UIView {
     
     // MARK: - 属性
     /// 布局配置
-    fileprivate var config = ZZPlayerViewConfig()
+    fileprivate var config = ZZPlayerViewConfig() {
+        didSet {
+            updateTop()
+            updateMid()
+            updateBottom()
+            
+            layoutIfNeeded()
+        }
+    }
     
     /// 竖屏配置
     var configVertical = ZZPlayerViewConfig()
@@ -73,7 +81,7 @@ class ZZPlayerView: UIView {
             
             player!.playerItemResource = playerItemResource
             
-            playPauseBtn.setImage(autoPlay ? config.bottom.playPauseBtnPauseImg : config.bottom.playPauseBtnPlayImg, for: .normal)
+            playPauseBtn.setImage(autoPlay ? config.bottom.playPausePauseImg : config.bottom.playPausePlayImg, for: .normal)
         }
     }
     /// 播放的资源数组
@@ -85,9 +93,6 @@ class ZZPlayerView: UIView {
             self.playerItemResource = playerItemResource
         }
     }
-    
-    /// 自动隐藏控制条的时间
-    var autoHideControlDuration: TimeInterval = 4
     
     /// 是否全屏
     fileprivate var isFullScreen: Bool {
@@ -257,10 +262,10 @@ extension ZZPlayerView {
         startTimeLabel.text = "00:00"
         player.seekTo(time: 0)
         if playEndStop {
-            playPauseBtn.setImage(config.bottom.playPauseBtnPlayImg, for: .normal)
+            playPauseBtn.setImage(config.bottom.playPausePlayImg, for: .normal)
             player.pauseByUser()
         } else {
-            playPauseBtn.setImage(autoPlay ? config.bottom.playPauseBtnPlayImg : config.bottom.playPauseBtnPauseImg, for: .normal)
+            playPauseBtn.setImage(autoPlay ? config.bottom.playPausePlayImg : config.bottom.playPausePauseImg, for: .normal)
             autoPlay ? player.play() : player.pauseByUser()
         }
     }
@@ -271,7 +276,7 @@ extension ZZPlayerView {
     
     // MARK: - 控制层的显示隐藏
     fileprivate func showControl() {
-        UIView.animate(withDuration: 0.5, animations: {
+        UIView.animate(withDuration: config.animateDuration, animations: {
             self.topView.alpha = 1
             self.bottomView.alpha = 1
             }) { (_) in
@@ -281,7 +286,7 @@ extension ZZPlayerView {
     
     /// 隐藏控制条
     @objc fileprivate func hideControl() {
-        UIView.animate(withDuration: 0.5, animations: {
+        UIView.animate(withDuration: config.animateDuration, animations: {
             self.topView.alpha = 0
             self.bottomView.alpha = 0
         }) { (_) in
@@ -292,7 +297,7 @@ extension ZZPlayerView {
     /// 稍后隐藏控制条
     fileprivate func hideControlLater() {
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
-        perform(#selector(hideControl), with: nil, afterDelay: autoHideControlDuration)
+        perform(#selector(hideControl), with: nil, afterDelay: config.autoHideControlDuration)
     }
     
     
@@ -326,7 +331,7 @@ extension ZZPlayerView {
         
         self.totalTime = CGFloat(CMTimeGetSeconds(playerItem.duration))
         self.panStartTime = CGFloat(CMTimeGetSeconds(playerItem.currentTime()))
-        UIView.animate(withDuration: 0.1, animations: {
+        UIView.animate(withDuration: 0.25, animations: {
             self.panPlayingStateView.alpha = 1
         })
     }
@@ -367,7 +372,7 @@ extension ZZPlayerView {
         
         hideControlLater()
         
-        UIView.animate(withDuration: 0.5, animations: {
+        UIView.animate(withDuration: config.animateDuration, animations: {
             self.panPlayingStateView.alpha = 0
         })
     }
@@ -427,10 +432,10 @@ extension ZZPlayerView {
         }
 
         if !player.isPaused {
-            playPauseBtn.setImage(config.bottom.playPauseBtnPlayImg, for: .normal)
+            playPauseBtn.setImage(config.bottom.playPausePlayImg, for: .normal)
             player.pauseByUser()
         } else {
-            playPauseBtn.setImage(config.bottom.playPauseBtnPauseImg, for: .normal)
+            playPauseBtn.setImage(config.bottom.playPausePauseImg, for: .normal)
             player.play()
             hideControlLater()
         }
@@ -465,9 +470,11 @@ extension ZZPlayerView {
         if isFullScreen {
             UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
             UIApplication.shared.statusBarOrientation = .portrait
+            config = configVertical
         } else {
             UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
             UIApplication.shared.statusBarOrientation = .landscapeRight
+            config = configHorizontal
         }
         
         print(#function)
@@ -557,7 +564,7 @@ extension ZZPlayerView {
         panPlayingStateTimeLabel.font = config.center.timeFont
         panPlayingStateTimeLabel.textAlignment = .center
         
-        panPlayingStateImgView = UIImageView(image: config.center.iconImage)
+        panPlayingStateImgView = UIImageView(image: config.center.forwardImage)
         
         
         panPlayingStateView.addSubview(panPlayingStateImgView)
@@ -577,9 +584,8 @@ extension ZZPlayerView {
         
         panPlayingStateTimeLabel.snp.makeConstraints { (maker) in
             maker.top.equalTo(panPlayingStateImgView.snp.bottom).offset(config.center.timeTopInset)
-            maker.centerX.equalTo(panPlayingStateView)
+            maker.centerX.width.equalTo(panPlayingStateView)
             maker.bottom.equalTo(panPlayingStateView).offset(-config.center.timeBottomInset)
-            maker.width.equalTo(panPlayingStateView)
         }
     }
     
@@ -597,25 +603,25 @@ extension ZZPlayerView {
         }
         
         playPauseBtn = UIButton()
-        playPauseBtn.setImage(config.bottom.playPauseBtn.image, for: .normal)
+        playPauseBtn.setImage(config.bottom.playPause.image, for: .normal)
         
         nextBtn = UIButton()
-        nextBtn.setImage(config.bottom.nextBtn.image, for: .normal)
+        nextBtn.setImage(config.bottom.next.image, for: .normal)
         
         fullScreenBtn = UIButton()
-        fullScreenBtn.setImage(config.bottom.fullScreenBtn.image, for: .normal)
+        fullScreenBtn.setImage(config.bottom.fullScreen.image, for: .normal)
         
         
         startTimeLabel = UILabel()
         startTimeLabel.textAlignment = .right
         startTimeLabel.text = "00:00"
-        startTimeLabel.textColor = config.bottom.startTimeLabel.color
-        startTimeLabel.font = config.bottom.startTimeLabel.font
+        startTimeLabel.textColor = config.bottom.startTime.color
+        startTimeLabel.font = config.bottom.startTime.font
         
         totalTimeLabel = UILabel()
         totalTimeLabel.text = "00:00"
-        totalTimeLabel.textColor = .white
-        totalTimeLabel.font = UIFont.systemFont(ofSize: 12)
+        totalTimeLabel.textColor = config.bottom.totalTime.color
+        totalTimeLabel.font = config.bottom.totalTime.font
         
         sliderView.setThumbImage(config.bottom.slider.thumbImage, for: .normal)
         sliderView.minimumTrackTintColor = config.bottom.slider.minimumTrackTintColor
@@ -651,26 +657,26 @@ extension ZZPlayerView {
         }
         
         playPauseBtn.snp.makeConstraints { (maker) in
-            maker.centerY.equalTo(bottomView).offset(config.bottom.playPauseBtn.offsetY)
-            maker.left.equalTo(config.bottom.playPauseBtn.leftPadding)
-            maker.size.equalTo(config.bottom.playPauseBtn.size)
+            maker.centerY.equalTo(bottomView).offset(config.bottom.playPause.offsetY)
+            maker.left.equalTo(config.bottom.playPause.leftPadding)
+            maker.size.equalTo(config.bottom.playPause.size)
         }
         
         nextBtn.snp.makeConstraints { (maker) in
-            maker.centerY.equalTo(bottomView).offset(config.bottom.nextBtn.offsetY)
-            maker.left.equalTo(playPauseBtn.snp.right).offset(config.bottom.nextBtn.leftPadding)
-            maker.size.equalTo(config.bottom.nextBtn.size)
+            maker.centerY.equalTo(bottomView).offset(config.bottom.next.offsetY)
+            maker.left.equalTo(playPauseBtn.snp.right).offset(config.bottom.next.leftPadding)
+            maker.size.equalTo(config.bottom.next.size)
         }
         
         startTimeLabel.snp.makeConstraints { (maker) in
-            maker.centerY.equalTo(bottomView).offset(config.bottom.startTimeLabel.offsetY)
-            maker.width.equalTo(timeWidth(font: config.bottom.startTimeLabel.font))
-            maker.left.equalTo(nextBtn.snp.right).offset(config.bottom.startTimeLabel.leftPadding)
+            maker.centerY.equalTo(bottomView).offset(config.bottom.startTime.offsetY)
+            maker.width.equalTo(timeWidth(font: config.bottom.startTime.font))
+            maker.left.equalTo(nextBtn.snp.right).offset(config.bottom.startTime.leftPadding)
         }
         
         sliderView.snp.makeConstraints { (maker) in
             maker.centerY.equalTo(bottomView).offset(config.bottom.slider.offsetY)
-            maker.left.equalTo(nextBtn.snp.right).offset(timeWidth(font: config.bottom.startTimeLabel.font) + config.bottom.slider.leftPadding)
+            maker.left.equalTo(nextBtn.snp.right).offset(timeWidth(font: config.bottom.startTime.font) + config.bottom.slider.leftPadding)
             maker.right.equalTo(totalTimeLabel.snp.left).offset(-config.bottom.slider.rightPadding)
         }
         
@@ -681,15 +687,15 @@ extension ZZPlayerView {
         }
         
         totalTimeLabel.snp.makeConstraints { (maker) in
-            maker.centerY.equalTo(bottomView).offset(config.bottom.totalTimeLabel.offsetY)
-            maker.width.equalTo(timeWidth(font: config.bottom.totalTimeLabel.font))
-            maker.right.equalTo(fullScreenBtn.snp.left).offset(-config.bottom.totalTimeLabel.rightPadding)
+            maker.centerY.equalTo(bottomView).offset(config.bottom.totalTime.offsetY)
+            maker.width.equalTo(timeWidth(font: config.bottom.totalTime.font))
+            maker.right.equalTo(fullScreenBtn.snp.left).offset(-config.bottom.totalTime.rightPadding)
         }
         
         fullScreenBtn.snp.makeConstraints { (maker) in
-            maker.centerY.equalTo(bottomView).offset(config.bottom.fullScreenBtn.offsetY)
-            maker.right.equalTo(-config.bottom.fullScreenBtn.rightPadding)
-            maker.size.equalTo(config.bottom.fullScreenBtn.size)
+            maker.centerY.equalTo(bottomView).offset(config.bottom.fullScreen.offsetY)
+            maker.right.equalTo(-config.bottom.fullScreen.rightPadding)
+            maker.size.equalTo(config.bottom.fullScreen.size)
         }
     }
     
@@ -707,7 +713,7 @@ extension ZZPlayerView {
         }
         
         backBtn = UIButton()
-        backBtn.setImage(config.top.leftIcon.image, for: .normal)
+        backBtn.setImage(config.top.icon.image, for: .normal)
         
         titleLabel = UILabel()
         titleLabel.textColor = config.top.title.color
@@ -732,9 +738,9 @@ extension ZZPlayerView {
         }
         
         backBtn.snp.makeConstraints { (maker) in
-            maker.left.equalTo(config.top.leftIcon.leftPadding)
-            maker.centerY.equalTo(topView).offset(config.top.leftIcon.offsetY)
-            maker.size.equalTo(config.top.leftIcon.size)
+            maker.left.equalTo(config.top.icon.leftPadding)
+            maker.centerY.equalTo(topView).offset(config.top.icon.offsetY)
+            maker.size.equalTo(config.top.icon.size)
         }
         
         titleLabel.snp.makeConstraints { (maker) in
@@ -744,11 +750,158 @@ extension ZZPlayerView {
         }
     }
     
-    private func timeWidth(font: UIFont) -> CGFloat {
-        return ceil(("00:00:00" as NSString).boundingRect(with: CGSize(width: Int.max, height: Int.max), options: [], attributes: [NSFontAttributeName: font], context: nil).size.width)
+    
+    //MARK: - 更新约束
+    fileprivate func updateTop() {
+        
+        switch config.top.background {
+        case let .gradientLayer(c1, c2):
+            topBackgroundView.isHidden = true
+            if topGradientLayer == nil {
+                topGradientLayer = addGradientLayer(toView: topView, colors: [c1.cgColor, c2.cgColor])
+            } else {
+                topGradientLayer.isHidden = false
+                topGradientLayer.colors = [c1.cgColor, c2.cgColor]
+            }
+        case let .image(img):
+            topGradientLayer?.isHidden = true
+            topBackgroundView.isHidden = false
+            topBackgroundView.image = img
+        }
+        
+        backBtn.setImage(config.top.icon.image, for: .normal)
+        titleLabel.textColor = config.top.title.color
+        titleLabel.font = config.top.title.font
+        
+        topView.snp.updateConstraints { (maker) in
+            maker.height.equalTo(config.top.height)
+        }
+        
+        backBtn.snp.updateConstraints { (maker) in
+            maker.left.equalTo(config.top.icon.leftPadding)
+            maker.centerY.equalTo(topView).offset(config.top.icon.offsetY)
+            maker.size.equalTo(config.top.icon.size)
+        }
+        
+        titleLabel.snp.updateConstraints { (maker) in
+            maker.left.equalTo(backBtn.snp.right).offset(config.top.title.leftPadding)
+            maker.centerY.equalTo(topView).offset(config.top.title.offsetY)
+            maker.right.equalTo(-config.top.title.rightPadding)
+        }
     }
     
-    // 添加渐变层
+    fileprivate func updateMid() {
+        panPlayingStateTimeLabel.font = config.center.timeFont
+        panPlayingStateTimeLabel.textColor = config.center.timeColor
+        
+        panPlayingStateView.snp.updateConstraints { (maker) in
+            maker.width.equalTo(config.center.width)
+        }
+        
+        panPlayingStateImgView.snp.updateConstraints { (maker) in
+            maker.top.equalTo(config.center.iconTopInset)
+            maker.size.equalTo(config.center.iconSize)
+        }
+        
+        panPlayingStateTimeLabel.snp.updateConstraints { (maker) in
+            maker.top.equalTo(panPlayingStateImgView.snp.bottom).offset(config.center.timeTopInset)
+            maker.bottom.equalTo(panPlayingStateView).offset(-config.center.timeBottomInset)
+        }
+
+    }
+    
+    fileprivate func updateBottom() {
+        
+        switch config.bottom.background {
+        case let .gradientLayer(c1, c2):
+            bottomBackgroundView.isHidden = true
+            if bottomGradientLayer == nil {
+                bottomGradientLayer = addGradientLayer(toView: bottomView, colors: [c1.cgColor, c2.cgColor])
+            } else {
+                bottomGradientLayer.isHidden = false
+                bottomGradientLayer.colors = [c1.cgColor, c2.cgColor]
+            }
+        case let .image(img):
+            bottomGradientLayer?.isHidden = true
+            bottomBackgroundView.isHidden = false
+            bottomBackgroundView.image = img
+        }
+        
+        if let player = player {
+            if player.isPaused {
+                playPauseBtn.setImage(config.bottom.playPausePlayImg, for: .normal)
+            } else {
+                playPauseBtn.setImage(config.bottom.playPausePauseImg, for: .normal)
+            }
+        }
+        
+        nextBtn.setImage(config.bottom.next.image, for: .normal)
+
+        fullScreenBtn.setImage(config.bottom.fullScreen.image, for: .normal)
+
+        startTimeLabel.textColor = config.bottom.startTime.color
+        startTimeLabel.font = config.bottom.startTime.font
+        
+        totalTimeLabel.textColor = config.bottom.totalTime.color
+        totalTimeLabel.font = config.bottom.totalTime.font
+        
+        sliderView.setThumbImage(config.bottom.slider.thumbImage, for: .normal)
+        sliderView.minimumTrackTintColor = config.bottom.slider.minimumTrackTintColor
+        sliderView.maximumTrackTintColor = config.bottom.slider.maximumTrackTintColor
+        
+        progressView.trackTintColor = config.bottom.progressView.trackTintColor
+        progressView.progressTintColor = config.bottom.progressView.progressTintColor
+        
+        
+        
+        bottomView.snp.updateConstraints { (maker) in
+            maker.height.equalTo(config.bottom.height)
+        }
+        
+        playPauseBtn.snp.updateConstraints { (maker) in
+            maker.centerY.equalTo(bottomView).offset(config.bottom.playPause.offsetY)
+            maker.left.equalTo(config.bottom.playPause.leftPadding)
+            maker.size.equalTo(config.bottom.playPause.size)
+        }
+        
+        nextBtn.snp.updateConstraints { (maker) in
+            maker.centerY.equalTo(bottomView).offset(config.bottom.next.offsetY)
+            maker.left.equalTo(playPauseBtn.snp.right).offset(config.bottom.next.leftPadding)
+            maker.size.equalTo(config.bottom.next.size)
+        }
+        
+        startTimeLabel.snp.updateConstraints { (maker) in
+            maker.centerY.equalTo(bottomView).offset(config.bottom.startTime.offsetY)
+            maker.width.equalTo(timeWidth(font: config.bottom.startTime.font))
+            maker.left.equalTo(nextBtn.snp.right).offset(config.bottom.startTime.leftPadding)
+        }
+        
+        sliderView.snp.updateConstraints { (maker) in
+            maker.centerY.equalTo(bottomView).offset(config.bottom.slider.offsetY)
+            maker.left.equalTo(nextBtn.snp.right).offset(timeWidth(font: config.bottom.startTime.font) + config.bottom.slider.leftPadding)
+            maker.right.equalTo(totalTimeLabel.snp.left).offset(-config.bottom.slider.rightPadding)
+        }
+        
+        progressView.snp.updateConstraints { (maker) in
+            maker.height.equalTo(config.bottom.progressView.height)
+            maker.width.centerX.equalTo(sliderView)
+            maker.centerY.equalTo(sliderView).offset(0.5)
+        }
+        
+        totalTimeLabel.snp.updateConstraints { (maker) in
+            maker.centerY.equalTo(bottomView).offset(config.bottom.totalTime.offsetY)
+            maker.width.equalTo(timeWidth(font: config.bottom.totalTime.font))
+            maker.right.equalTo(fullScreenBtn.snp.left).offset(-config.bottom.totalTime.rightPadding)
+        }
+        
+        fullScreenBtn.snp.updateConstraints { (maker) in
+            maker.centerY.equalTo(bottomView).offset(config.bottom.fullScreen.offsetY)
+            maker.right.equalTo(-config.bottom.fullScreen.rightPadding)
+            maker.size.equalTo(config.bottom.fullScreen.size)
+        }
+    }
+    
+    /// 添加渐变层
     private func addGradientLayer(toView: UIView, colors: [Any]?) -> CAGradientLayer {
         let gradientLayer = CAGradientLayer()
         gradientLayer.colors = colors
@@ -756,12 +909,15 @@ extension ZZPlayerView {
         return gradientLayer
     }
     
+    private func timeWidth(font: UIFont) -> CGFloat {
+        return ceil(("00:00:00" as NSString).boundingRect(with: CGSize(width: Int.max, height: Int.max), options: [], attributes: [NSFontAttributeName: font], context: nil).size.width)
+    }
     
     /// 布局渐变层
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        topGradientLayer.frame = topView.bounds
-        bottomGradientLayer.frame = bottomView.bounds
+        topGradientLayer?.frame = topView.bounds
+        bottomGradientLayer?.frame = bottomView.bounds
     }
 }
