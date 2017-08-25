@@ -94,6 +94,9 @@ class ZZPlayerView: UIView {
         }
     }
     
+    /// 返回操作
+    var backAction: (() -> ())?
+    
     /// 是否全屏
     fileprivate var isFullScreen: Bool {
         return UIApplication.shared.statusBarOrientation.isLandscape
@@ -418,7 +421,7 @@ extension ZZPlayerView {
         if isFullScreen {
             fullscreen()
         } else {
-            
+            backAction?()
         }
 
         print(#function)
@@ -471,10 +474,12 @@ extension ZZPlayerView {
             UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
             UIApplication.shared.statusBarOrientation = .portrait
             config = configVertical
+            fullScreenBtn.setImage(config.bottom.fullScreenImg, for: .normal)
         } else {
             UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
             UIApplication.shared.statusBarOrientation = .landscapeRight
             config = configHorizontal
+            fullScreenBtn.setImage(config.bottom.fullScreenBackImg, for: .normal)
         }
         
         print(#function)
@@ -848,8 +853,9 @@ extension ZZPlayerView {
         nextBtn.setImage(config.bottom.next.image, for: .normal)
         nextBtn.isHidden = config.bottom.hideNext
 
-        fullScreenBtn.setImage(config.bottom.fullScreen.image, for: .normal)
-
+//        fullScreenBtn.setImage(config.bottom.fullScreen.image, for: .normal)
+        
+        
         startTimeLabel.textColor = config.bottom.startTime.color
         startTimeLabel.font = config.bottom.startTime.font
         

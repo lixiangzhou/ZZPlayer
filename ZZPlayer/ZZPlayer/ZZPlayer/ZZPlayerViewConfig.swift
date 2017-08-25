@@ -68,6 +68,9 @@ struct ZZPlayerViewBottomConfig {
                                                     size: CGSize(width: 25, height: 25),
                                                     offsetY: 0)
     
+    var fullScreenImg = zz_bundleImage("zz_player_fullscreen")
+    var fullScreenBackImg = zz_bundleImage("zz_player_shrinkscreen")
+    
     /// 开始时间（实时时间）设置
     var startTime = ZZPlayerViewTopConfigLabel(font: UIFont.systemFont(ofSize: 12),
                                                     color: .white,
