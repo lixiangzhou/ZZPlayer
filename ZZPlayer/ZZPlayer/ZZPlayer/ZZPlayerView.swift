@@ -73,7 +73,7 @@ class ZZPlayerView: UIView {
             
             player!.playerItemResource = playerItemResource
             
-            playPauseBtn.setImage(autoPlay ? zz_bundleImage("zz_player_pause") : zz_bundleImage("zz_player_play"), for: .normal)
+            playPauseBtn.setImage(autoPlay ? config.bottom.playPauseBtnPauseImg : config.bottom.playPauseBtnPlayImg, for: .normal)
         }
     }
     /// 播放的资源数组
@@ -175,17 +175,10 @@ class ZZPlayerView: UIView {
     fileprivate let panPlayingStateView = UIView()
     
     /// pan手势控制快进、快退的图标
-    fileprivate let panPlayingStateImgView = UIImageView(image: zz_bundleImage("zz_player_quickback"))
+    fileprivate var panPlayingStateImgView: UIImageView!
     
     /// pan手势控制快进、快退的时间
-    fileprivate let panPlayingStateTimeLabel: UILabel = {
-        let label = UILabel()
-        label.text = "0 / 0"
-        label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 12)
-        label.textAlignment = .center
-        return label
-    }()
+    fileprivate var panPlayingStateTimeLabel: UILabel!
     
     // MARK:
     // 滑动屏幕时 音量/亮度控制
@@ -267,7 +260,7 @@ extension ZZPlayerView {
             playPauseBtn.setImage(config.bottom.playPauseBtnPlayImg, for: .normal)
             player.pauseByUser()
         } else {
-            playPauseBtn.setImage(autoPlay ? zz_bundleImage("zz_player_pause") : zz_bundleImage("zz_player_play"), for: .normal)
+            playPauseBtn.setImage(autoPlay ? config.bottom.playPauseBtnPlayImg : config.bottom.playPauseBtnPauseImg, for: .normal)
             autoPlay ? player.play() : player.pauseByUser()
         }
     }
@@ -355,9 +348,9 @@ extension ZZPlayerView {
         }
         
         if offsetX > 0 {
-            panPlayingStateImgView.image = zz_bundleImage("zz_player_quickforward")
+            panPlayingStateImgView.image = config.center.forwardImage
         } else {
-            panPlayingStateImgView.image = zz_bundleImage("zz_player_quickback")
+            panPlayingStateImgView.image = config.center.backImage
         }
         
         panPlayingStateTimeLabel.text = transform(time: time) + " / " + transform(time: Int(self.totalTime))
@@ -434,10 +427,10 @@ extension ZZPlayerView {
         }
 
         if !player.isPaused {
-            playPauseBtn.setImage(zz_bundleImage("zz_player_play"), for: .normal)
+            playPauseBtn.setImage(config.bottom.playPauseBtnPlayImg, for: .normal)
             player.pauseByUser()
         } else {
-            playPauseBtn.setImage(zz_bundleImage("zz_player_pause"), for: .normal)
+            playPauseBtn.setImage(config.bottom.playPauseBtnPauseImg, for: .normal)
             player.play()
             hideControlLater()
         }
@@ -558,28 +551,34 @@ extension ZZPlayerView {
         panPlayingStateView.alpha = 0
         panPlayingStateView.backgroundColor = UIColor(white: 0, alpha: 0.75)
         
+        panPlayingStateTimeLabel = UILabel()
+        panPlayingStateTimeLabel.text = "0 / 0"
+        panPlayingStateTimeLabel.textColor = config.center.timeColor
+        panPlayingStateTimeLabel.font = config.center.timeFont
+        panPlayingStateTimeLabel.textAlignment = .center
+        
+        panPlayingStateImgView = UIImageView(image: config.center.iconImage)
+        
+        
         panPlayingStateView.addSubview(panPlayingStateImgView)
         panPlayingStateView.addSubview(panPlayingStateTimeLabel)
-        
-        let imgSize = panPlayingStateImgView.image!.size
         
         panPlayingStateView.snp.makeConstraints { (maker) in
             maker.centerX.equalTo(self)
             maker.centerY.equalTo(self).multipliedBy(0.8)
-            maker.width.equalTo(100)
+            maker.width.equalTo(config.center.width)
         }
         
         panPlayingStateImgView.snp.makeConstraints { (maker) in
-            maker.top.equalTo(5)
+            maker.top.equalTo(config.center.iconTopInset)
             maker.centerX.equalTo(panPlayingStateView)
-            maker.height.equalTo(30)
-            maker.width.equalTo(imgSize.width / imgSize.height * 30)
+            maker.size.equalTo(config.center.iconSize)
         }
         
         panPlayingStateTimeLabel.snp.makeConstraints { (maker) in
-            maker.top.equalTo(panPlayingStateImgView.snp.bottom).offset(5)
+            maker.top.equalTo(panPlayingStateImgView.snp.bottom).offset(config.center.timeTopInset)
             maker.centerX.equalTo(panPlayingStateView)
-            maker.bottom.equalTo(panPlayingStateView).offset(-5)
+            maker.bottom.equalTo(panPlayingStateView).offset(-config.center.timeBottomInset)
             maker.width.equalTo(panPlayingStateView)
         }
     }

@@ -44,6 +44,7 @@ struct ZZPlayerViewBottomConfig {
                                                                 height: 25),
                                                    offsetY: 0)
     var playPauseBtnPlayImg = zz_bundleImage("zz_player_play")
+    var playPauseBtnPauseImg = zz_bundleImage("zz_player_pause")
  
     var nextBtn = ZZPlayerViewTopConfigButton(image: zz_bundleImage("zz_player_skip_next"),
                                               leftPadding: 10,
@@ -77,9 +78,27 @@ struct ZZPlayerViewBottomConfig {
                                              minimumTrackTintColor: UIColor(red: 45 / 255.0, green: 186 / 255.0, blue: 247 / 255.0, alpha: 1), maximumTrackTintColor: UIColor.clear, leftPadding: 5, rightPadding: 0, offsetY: 0)
 }
 
+struct ZZPlayerViewCenterConfig {
+    var width: CGFloat = 100
+    
+    var timeFont = UIFont.systemFont(ofSize: 12)
+    var timeColor = UIColor.white
+    var timeTopInset: CGFloat = 5
+    var timeBottomInset: CGFloat = 5
+    
+    var iconImage = zz_bundleImage("zz_player_quickback")
+    var iconTopInset: CGFloat = 5
+    var iconSize = CGSize(width: zz_bundleImage("zz_player_quickback")!.size.width / zz_bundleImage("zz_player_quickback")!.size.height * 30,
+                          height: 30)
+    
+    var forwardImage = zz_bundleImage("zz_player_quickforward")
+    var backImage = zz_bundleImage("zz_player_quickback")
+}
+
 struct ZZPlayerViewConfig {
     let top = ZZPlayerViewTopConfig()
     let bottom = ZZPlayerViewBottomConfig()
+    let center = ZZPlayerViewCenterConfig()
 }
 
 enum ZZPlayerViewTopConfigBackground {
