@@ -99,6 +99,7 @@ struct ZZPlayerViewBottomConfig {
 
 struct ZZPlayerViewCenterConfig {
     var width: CGFloat = 100
+    var hidden = false
     
     /// 时间设置
     var timeFont = UIFont.systemFont(ofSize: 12)

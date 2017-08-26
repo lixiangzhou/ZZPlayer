@@ -563,6 +563,8 @@ extension ZZPlayerView {
         panPlayingStateView.alpha = 0
         panPlayingStateView.backgroundColor = UIColor(white: 0, alpha: 0.75)
         
+        panPlayingStateView.isHidden = config.center.hidden
+        
         panPlayingStateTimeLabel = UILabel()
         panPlayingStateTimeLabel.text = "0 / 0"
         panPlayingStateTimeLabel.textColor = config.center.timeColor
@@ -598,6 +600,8 @@ extension ZZPlayerView {
         bottomView.backgroundColor = UIColor.clear
         bottomView.isHidden = config.bottom.hidden
         addSubview(bottomView)
+        
+        bottomView.isHidden = config.bottom.hidden
         
         bottomView.addSubview(bottomBackgroundView)
         switch config.bottom.background {
@@ -719,6 +723,8 @@ extension ZZPlayerView {
         topView.isHidden = config.top.hidden
         addSubview(topView)
         
+        topView.isHidden = config.top.hidden
+        
         topView.addSubview(topBackgroundView)
         switch config.top.background {
         case let .gradientLayer(c1, c2):
@@ -768,6 +774,7 @@ extension ZZPlayerView {
     
     //MARK: - 更新约束
     fileprivate func updateTop() {
+        topView.isHidden = config.top.hidden
         
         switch config.top.background {
         case let .gradientLayer(c1, c2):
@@ -806,6 +813,8 @@ extension ZZPlayerView {
     }
     
     fileprivate func updateMid() {
+        panPlayingStateView.isHidden = config.center.hidden
+        
         panPlayingStateTimeLabel.font = config.center.timeFont
         panPlayingStateTimeLabel.textColor = config.center.timeColor
         
@@ -826,6 +835,7 @@ extension ZZPlayerView {
     }
     
     fileprivate func updateBottom() {
+        bottomView.isHidden = config.bottom.hidden
         
         switch config.bottom.background {
         case let .gradientLayer(c1, c2):
