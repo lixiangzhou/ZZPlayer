@@ -68,7 +68,9 @@ private enum ZZPlayerObseredKeyPath: String {
 /// 提供最基本的播放功能
 class ZZPlayer: UIView {
     
-    override init(frame: CGRect) {
+    public static let shared = ZZPlayer()
+    
+    private override init(frame: CGRect) {
         super.init(frame: frame)
         
         backgroundColor = UIColor.clear
@@ -90,7 +92,7 @@ class ZZPlayer: UIView {
         removeObservers()
     }
     
-    // MARK: - 属性
+    // MARK: - 属性 Public
     
     weak var delegate: ZZPlayerDelegate?
     
@@ -98,7 +100,7 @@ class ZZPlayer: UIView {
     var playerItemResource: ZZPlayerItemResource? {
         didSet {
 
-            if playerItemResource == nil || playerItemResource!.isEqual(oldValue) {
+            if playerItemResource == nil {
                 return
             }
             
@@ -154,7 +156,7 @@ class ZZPlayer: UIView {
     var currentPlayerItem: AVPlayerItem? {
         return playerLayer?.player?.currentItem
     }
-    
+    // MARK: - Private
     /// 播放层
     fileprivate var playerLayer: AVPlayerLayer?
     

@@ -12,7 +12,6 @@ import UIKit
 @objc protocol ZZPlayerItemResource: NSObjectProtocol {
     var title: String? { get set }
     var videoUrlString: String? { get set }
-    @objc optional var placeholderImage: UIImage? { get set }
-    @objc optional var placeholderImageUrl: String?  { get set }
-    @objc optional var resolutions: [String: String]?  { get set }
+    var placeholderImage: UIImage? { get set }
+    var placeholderImageUrl: String?  { get set }
 }
