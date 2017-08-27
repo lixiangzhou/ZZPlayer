@@ -6,10 +6,12 @@
 //  Copyright © 2017年 lixiangzhou. All rights reserved.
 //
 
-import UIKit
+import   UIKit
 import AVFoundation
 
 class VideoModel: NSObject, ZZPlayerItemResource {
+    var placeholderImage: UIImage?
+    var placeholderImageUrl: String?
     var title: String?
     var videoUrlString: String?
     
@@ -21,38 +23,66 @@ class VideoModel: NSObject, ZZPlayerItemResource {
 
 class ViewController: UIViewController {
 
-    var playerView: ZZPlayerView!
+    var datas = [VideoModel]()
+    
+    var tableView: UITableView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        tableView = UITableView(frame: view.bounds)
+        view.addSubview(tableView)
+        tableView.register(ZZPlayerCell.self, forCellReuseIdentifier: "ID")
+        tableView.dataSource = self
+        tableView.rowHeight = 280
         
-        playerView = ZZPlayerView(frame: CGRect(x: 20, y: 20, width: view.frame.width - 40, height: (view.frame.height - 40) * 3 / 4))
-        var config = playerView.configHorizontal
-        config.top.title.font = UIFont.systemFont(ofSize: 16)
-        config.top.height = 60
-        config.top.icon.size = CGSize(width: 50, height: 50)
-        config.bottom.height = 55
-        config.bottom.hideNext = false
-        playerView.configHorizontal = config
-        playerView.autoPlay = false
-        view.addSubview(playerView)
-
-        playerView.snp.makeConstraints { (maker) in
-            maker.top.left.right.equalTo(self.view)
-            maker.width.equalTo(self.view.snp.width)
-            maker.height.equalTo(self.view.snp.width).multipliedBy(UIScreen.main.bounds.width / UIScreen.main.bounds.height)
-        }
         
-        playerView.playerItemResources = [
-            VideoModel(title: "测试标题", videoUrlString: "http://baobab.wdjcdn.com/14525705791193.mp4"),
-            VideoModel(title: "测试标题2", videoUrlString: "http://baobab.wdjcdn.com/14525705791193.mp4")]
-//        playerView.backgroundColor = UIColor.black
+        let vm = VideoModel(title: "测试标题", videoUrlString: "http://baobab.wdjcdn.com/14525705791193.mp4")
 
-
+        datas = Array<VideoModel>(repeating: vm, count: 10)
     }
 
+}
 
+extension ViewController: UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return datas.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ID", for: indexPath) as! ZZPlayerCell
+        cell.resource = datas[indexPath.row]
+        return cell
+    }
+    
+}
 
+class ZZPlayerCell: UITableViewCell {
+    
+    var playClosure: (()->())?
+    
+    override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        let imgView = UIImageView(image: UIImage(named: "cell_bg"))
+        imgView.isUserInteractionEnabled = true
+        imgView.tag = 101
+        contentView.addSubview(imgView)
+        imgView.snp.makeConstraints { (maker) in
+            maker.top.left.right.equalToSuperview()
+            maker.bottom.equalToSuperview().offset(-10)
+        }
+        imgView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(play)))
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    var resource: VideoModel?
+    
+    @objc private func play() {
+//        playClosure?()
+        ZZPlayerView.shared.play(resource: resource!, inCell: self, withPlayerContainerTag: 101)
+    }
 }
 

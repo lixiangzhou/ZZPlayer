@@ -8,12 +8,16 @@
 
 import UIKit
 import MediaPlayer
+import SnapKit
+import Kingfisher
 
 class ZZPlayerView: UIView {
     
+    public static let shared = ZZPlayerView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width * 3 / 4))
+    
     /// 初始化
     
-    override init(frame: CGRect) {
+    private override init(frame: CGRect) {
         super.init(frame: frame)
         
         setupUI()
@@ -40,7 +44,7 @@ class ZZPlayerView: UIView {
         NotificationCenter.default.removeObserver(self)
     }
     
-    // MARK: - 属性
+    // MARK: - 属性 Public
     /// 布局配置
     fileprivate var config = ZZPlayerViewConfig() {
         didSet {
@@ -54,24 +58,25 @@ class ZZPlayerView: UIView {
     
     /// 竖屏配置
     var configVertical = ZZPlayerViewConfig()
+    
     /// 横屏配置
     var configHorizontal = ZZPlayerViewConfig()
     
     /// 最后的一个视频播放结束时是否停止播放, false 时会一直播放最后一个视频
     var playEndStop = true
+    
     /// 开始播放时是否自动播放，当播放结束时是否自动重新播放，优先级低于 playEndStop
     var autoPlay: Bool = true
+    
     /// 播放的资源
     var playerItemResource: ZZPlayerItemResource? {
         didSet {
-            guard let playerItemResource = playerItemResource else {
-                return
-            }
+            guard let playerItemResource = playerItemResource else { return }
             
             titleLabel.text = playerItemResource.title
             
             if player == nil {
-                player = ZZPlayer()
+                player = ZZPlayer.shared
                 player?.delegate = self
                 insertSubview(player!, at: 0)
                 player?.snp.makeConstraints({ (maker) in
@@ -81,15 +86,18 @@ class ZZPlayerView: UIView {
             
             player!.playerItemResource = playerItemResource
             
+            backgroundImageView.kf.setImage(
+                with: URL(string: playerItemResource.placeholderImageUrl ?? ""),
+                placeholder: playerItemResource.placeholderImage)
+            
             playPauseBtn.setImage(autoPlay ? config.bottom.playPausePauseImg : config.bottom.playPausePlayImg, for: .normal)
         }
     }
     /// 播放的资源数组
     var playerItemResources: [ZZPlayerItemResource]? {
         didSet {
-            guard let playerItemResource = playerItemResources?.first else {
-                return
-            }
+            guard let playerItemResource = playerItemResources?.first else { return }
+            
             self.playerItemResource = playerItemResource
         }
     }
@@ -97,14 +105,18 @@ class ZZPlayerView: UIView {
     /// 返回操作
     var backAction: (() -> ())?
     
+    
+    // MARK: - Private
     /// 是否全屏
     fileprivate var isFullScreen: Bool {
         return UIApplication.shared.statusBarOrientation.isLandscape
     }
     /// 播放器
     fileprivate var player: ZZPlayer?
+    
     /// 是否显示控制条
     fileprivate var isControlShowing = true
+    
     // 屏幕滑动调整播放进度相关
     fileprivate var panStartLocation = CGPoint.zero
     
@@ -129,6 +141,12 @@ class ZZPlayerView: UIView {
     /// 开始屏幕亮度
     fileprivate var startBrightnessValue: CGFloat = 0
     
+    /// 在Cell中播放时播放器父View的tag值
+    fileprivate var playerContainerTag = 0
+    
+    /// 在Cell中播放时，播放器所在的Cell
+    fileprivate var playerInCell: UIView?
+    
     // MARK: - UI 属性
     
     /// 顶部背景图
@@ -140,7 +158,7 @@ class ZZPlayerView: UIView {
     fileprivate var titleLabel: UILabel!
     
     
-    // MARK:
+    // MARK: -
     /// 底部
     
     fileprivate let bottomBackgroundView = UIImageView()
@@ -166,7 +184,7 @@ class ZZPlayerView: UIView {
     /// 总时间
     fileprivate var totalTimeLabel: UILabel!
     
-    // MARK:
+    // MARK: -
     // 顶部底部的透明层
     
     /// 顶部渐变层
@@ -175,7 +193,7 @@ class ZZPlayerView: UIView {
     /// 底部渐变层
     fileprivate var bottomGradientLayer: CAGradientLayer!
     
-    // MARK:
+    // MARK: -
     
     /// 滑动屏幕时 播放进度控制
     
@@ -188,7 +206,7 @@ class ZZPlayerView: UIView {
     /// pan手势控制快进、快退的时间
     fileprivate var panPlayingStateTimeLabel: UILabel!
     
-    // MARK:
+    // MARK: -
     // 滑动屏幕时 音量/亮度控制
     fileprivate var volumeSlider: UISlider = {
         var slider: UISlider?
@@ -201,13 +219,16 @@ class ZZPlayerView: UIView {
         return slider!
     }()
     
-    // MARK:
+    // MARK: -
     
     /// 顶部View
     fileprivate let topView = UIView()
     
     /// 底部View
     fileprivate let bottomView = UIView()
+    
+    /// 背景
+    fileprivate let backgroundImageView = UIImageView()
 }
 
 // MARK: - ZZPlayerDelegate
@@ -319,10 +340,10 @@ extension ZZPlayerView {
     
     /// 开始横向手势
     fileprivate func beginPanHorizontal(location: CGPoint) {
-        guard let player = player, let playerItem = player.currentPlayerItem else {
-            return
-        }
+        guard let player = player, let playerItem = player.currentPlayerItem else { return }
+        
         showControl()
+        
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         
         if player.isPaused {
@@ -430,9 +451,7 @@ extension ZZPlayerView {
     
     /// 暂停、播放
     func play_pause() {
-        guard let player = player else {
-            return
-        }
+        guard let player = player else { return }
 
         if !player.isPaused {
             playPauseBtn.setImage(config.bottom.playPausePlayImg, for: .normal)
@@ -448,9 +467,7 @@ extension ZZPlayerView {
     /// 下一首
     func next_piece() {
         guard let playerItemResources = playerItemResources,
-            playerItemResources.count > 1 else {
-            return
-        }
+            playerItemResources.count > 1 else { return }
         
         guard let index = playerItemResources.index(where: { (item) -> Bool in
             return item.isEqual(playerItemResource)
@@ -488,9 +505,8 @@ extension ZZPlayerView {
     
     /// 处理进度
     func playProgress(sender: UISlider) {
-        guard let player = player else {
-            return
-        }
+        guard let player = player else { return }
+        
         player.seekTo(time: sender.value)
     }
     
@@ -540,6 +556,29 @@ extension ZZPlayerView {
             break
         }
     }
+}
+
+
+// MARK: - Cell 中播放
+extension ZZPlayerView {
+    func play(resource: ZZPlayerItemResource, inCell cell: UIView, withPlayerContainerTag tag: Int) {
+        playerInCell = cell
+        playerContainerTag = tag
+        
+        playerItemResource = resource
+        
+        print(player)
+        print(cell.viewWithTag(tag))
+        guard let player = player,
+            let playerContainerView = cell.viewWithTag(tag) else { return }
+        
+        playerContainerView.addSubview(self)
+        
+        self.snp.remakeConstraints({ (maker) in
+            maker.edges.equalToSuperview()
+        })
+    }
+    
 }
 
 // MARK: - UI
