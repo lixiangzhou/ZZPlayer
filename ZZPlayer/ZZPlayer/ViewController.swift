@@ -37,11 +37,29 @@ class ViewController: UIViewController {
         tableView.dataSource = self
         tableView.rowHeight = 280
         
+        tableView.snp.makeConstraints { (maker) in
+            maker.edges.equalToSuperview()
+        }
+        
         let vm = VideoModel(title: "测试标题", videoUrlString: "http://baobab.wdjcdn.com/14525705791193.mp4")
 
         datas = Array<VideoModel>(repeating: vm, count: 10)
+        
+        ZZPlayerView.shared.configVertical.statusBarStyle = .default
+        ZZPlayerView.shared.configHorizontal.statusBarStyle = .lightContent
     }
 
+    override var shouldAutorotate: Bool {
+        return false
+    }
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return ZZPlayerView.shared.config.statusBarStyle
+    }
+    
+    override var prefersStatusBarHidden: Bool {
+        return ZZPlayerView.shared.config.statusBarHidden
+    }
 }
 
 extension ViewController: UITableViewDataSource {

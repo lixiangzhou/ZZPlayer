@@ -28,10 +28,10 @@
             </objects>
             <point key="canvasLocation" x="1076" y="138.98050974512745"/>
         </scene>
-        <!--Navigation Controller-->
+        <!--Nav View Controller-->
         <scene sceneID="XrQ-Ya-2dr">
             <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="ZR4-I9-PkT" sceneMemberID="viewController">
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="ZR4-I9-PkT" customClass="NavViewController" customModule="ZZPlayer" customModuleProvider="target" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="cQL-ov-vhe">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>

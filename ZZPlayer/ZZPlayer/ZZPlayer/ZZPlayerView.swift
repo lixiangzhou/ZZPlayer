@@ -22,7 +22,7 @@ class ZZPlayerView: UIView {
         
         setupUI()
         
-        NotificationCenter.default.addObserver(self, selector: #selector(orientationChanged), name: NSNotification.Name.UIApplicationDidChangeStatusBarOrientation, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(orientationChanged), name: NSNotification.Name.UIDeviceOrientationDidChange, object: nil)
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapAction))
         addGestureRecognizer(tap)
@@ -38,6 +38,12 @@ class ZZPlayerView: UIView {
     override func didMoveToSuperview() {
         super.didMoveToSuperview()
         layoutIfNeeded()
+        
+        if rootView.isEqual(superview) == false {
+            self.containerView = superview
+        } else {
+            
+        }
     }
     
      deinit {
@@ -46,7 +52,7 @@ class ZZPlayerView: UIView {
     
     // MARK: - 属性 Public
     /// 布局配置
-    fileprivate var config = ZZPlayerViewConfig() {
+    var config = ZZPlayerViewConfig() {
         didSet {
             updateTop()
             updateMid()
@@ -102,9 +108,8 @@ class ZZPlayerView: UIView {
     
     // MARK: - Private
     /// 是否全屏
-    fileprivate var isFullScreen: Bool {
-        return UIApplication.shared.statusBarOrientation.isLandscape
-    }
+    fileprivate var isFullScreen = false
+    
     /// 播放器
     fileprivate var player: ZZPlayer?
     
@@ -135,6 +140,23 @@ class ZZPlayerView: UIView {
     /// 开始屏幕亮度
     fileprivate var startBrightnessValue: CGFloat = 0
     
+    /// 播放器所在的父View
+    fileprivate var containerView: UIView!
+    
+    /// 应用的rootView
+    fileprivate var rootView: UIView {
+        return UIApplication.shared.keyWindow!.rootViewController!.view
+    }
+    
+    /// 播放器所在的控制器
+    fileprivate var controller: UIViewController? {
+        var responder = next
+        while responder != nil && (responder! is UIViewController == false) {
+            responder = responder!.next
+        }
+        return responder as? UIViewController
+    }
+    
     /// 在Cell中播放时，播放器父View的tag值
     fileprivate var playerContainerTag = 0
     
@@ -144,6 +166,7 @@ class ZZPlayerView: UIView {
     /// 在Cell中播放时，播放器所在的UITableView或UICollectionView
     fileprivate var playerScrllView: UIScrollView?
     
+    /// 在Cell中播放时，停止播放的原因
     fileprivate var playerPausedInCellReason = ZZCellPlayerStopReason.cellRectEdgeLeaveScrollView
     
     // MARK: - UI 属性
@@ -309,14 +332,80 @@ extension ZZPlayerView {
         }
     }
     
+    // MARK: - 屏幕方向改变
+    ///
     @objc fileprivate func orientationChanged() {
-        print(#function)
+        let orientation = UIDevice.current.orientation
+        let currentOrientation = UIDeviceOrientation.init(rawValue: UIApplication.shared.statusBarOrientation.rawValue)!
+        
+        
+        if orientation == .faceUp ||
+            orientation == .faceDown ||
+            orientation == .unknown ||
+            orientation == .portraitUpsideDown ||
+            orientation == currentOrientation {
+            return
+        }
+        
+        toOrientation(orientation)
+    }
+    
+    fileprivate func toOrientation(_ orientation: UIDeviceOrientation) {
+        if containerView == nil { return }
+        
+        self.isFullScreen = orientation != .portrait
+        
+        switch orientation {
+        case .portrait:
+            config = configVertical
+            fullScreenBtn.setImage(config.bottom.fullScreenImg, for: .normal)
+            
+            containerView.addSubview(self)
+            
+            snp.remakeConstraints({ (maker) in
+                maker.edges.equalTo(containerView)
+            })
+            
+            UIView.animate(withDuration: 0.25, animations: {
+                self.transform = .identity
+                self.layoutIfNeeded()
+            })
+            UIApplication.shared.statusBarOrientation = .portrait
+        case .landscapeLeft, .landscapeRight:
+            let currentOrientation = UIDeviceOrientation.init(rawValue: UIApplication.shared.statusBarOrientation.rawValue)!
+            
+            config = configHorizontal
+            fullScreenBtn.setImage(config.bottom.fullScreenBackImg, for: .normal)
+            
+            if currentOrientation == .portrait {
+                rootView.addSubview(self)
+                snp.remakeConstraints({ (maker) in
+                    maker.width.equalTo(UIScreen.main.bounds.height)
+                    maker.height.equalTo(UIScreen.main.bounds.width)
+                    maker.center.equalTo(UIApplication.shared.keyWindow!)
+                })
+            }
+            
+            self.transform = .identity
+            
+            UIView.animate(withDuration: 0.25, animations: {
+                self.transform = CGAffineTransform(rotationAngle: .pi * 0.5 * (orientation == .landscapeLeft ? 1 : -1))
+                self.layoutIfNeeded()
+            })
+            
+            UIApplication.shared.statusBarOrientation = UIInterfaceOrientation(rawValue: orientation.rawValue)!
+        default: break
+        }
+        
+        controller?.setNeedsStatusBarAppearanceUpdate()
+        showControlLaterHide()
     }
     
     // MARK: - 控制层的显示隐藏
     fileprivate func showControlLaterHide() {
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         UIView.animate(withDuration: config.animateDuration, animations: {
+            self.showStatusBar()
             self.topView.alpha = 1
             self.bottomView.alpha = 1
             }) { (_) in
@@ -328,6 +417,7 @@ extension ZZPlayerView {
     fileprivate func showControl() {
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         UIView.animate(withDuration: config.animateDuration, animations: {
+            self.showStatusBar()
             self.topView.alpha = 1
             self.bottomView.alpha = 1
         }) { (_) in
@@ -339,6 +429,7 @@ extension ZZPlayerView {
     @objc fileprivate func hideControl() {
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         UIView.animate(withDuration: config.animateDuration, animations: {
+            self.hideStatusBar()
             self.topView.alpha = 0
             self.bottomView.alpha = 0
         }) { (_) in
@@ -351,6 +442,41 @@ extension ZZPlayerView {
         perform(#selector(hideControl), with: nil, afterDelay: config.autoHideControlDuration)
     }
     
+    fileprivate func showStatusBar() {
+        switch config.statusBarShowMode {
+        case .alwaysShow:
+            config.statusBarHidden = false
+        case .alwaysHide:
+            if self.isFullScreen {
+                config.statusBarHidden = true
+            } else {
+                config.statusBarHidden = false
+            }
+        case .showHide:
+            config.statusBarHidden = false
+        }
+        controller?.setNeedsStatusBarAppearanceUpdate()
+    }
+    
+    fileprivate func hideStatusBar() {
+        switch config.statusBarShowMode {
+        case .alwaysShow:
+            config.statusBarHidden = false
+        case .alwaysHide:
+            if self.isFullScreen {
+                config.statusBarHidden = true
+            } else {
+                config.statusBarHidden = false
+            }
+        case .showHide:
+            if self.isFullScreen {
+                config.statusBarHidden = true
+            } else {
+                config.statusBarHidden = false
+            }
+        }
+        controller?.setNeedsStatusBarAppearanceUpdate()
+    }
     
     /// 转换时间
     fileprivate func transform(time: Int) -> String {
@@ -546,15 +672,15 @@ extension ZZPlayerView {
         }
         
         if isFullScreen {
-            UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
-            UIApplication.shared.statusBarOrientation = .portrait
-            config = configVertical
-            fullScreenBtn.setImage(config.bottom.fullScreenImg, for: .normal)
+            toOrientation(.portrait)
         } else {
-            UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
-            UIApplication.shared.statusBarOrientation = .landscapeRight
-            config = configHorizontal
-            fullScreenBtn.setImage(config.bottom.fullScreenBackImg, for: .normal)
+            let orientation = UIDevice.current.orientation
+            switch orientation {
+            case .landscapeLeft:
+                toOrientation(.landscapeRight)
+            default:
+                toOrientation(.landscapeLeft)
+            }
         }
         
         print(#function)
@@ -662,9 +788,6 @@ extension ZZPlayerView {
             
             let scrollFrame = scrollView.frame
             let cellFrame = cell.convert(cell.bounds, to: superView)
-            
-            print("scrollView \(scrollFrame)")
-            print("cell \(cellFrame)")
             
             let cellY = cellFrame.origin.y
             let cellMaxY = cellFrame.maxY

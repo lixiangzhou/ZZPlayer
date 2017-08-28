@@ -17,6 +17,7 @@
 		970491FA1E83AC940032355B /* ZZPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 970491F91E83AC940032355B /* ZZPlayerView.swift */; };
 		9730722C1F4F12F200423313 /* ZZPlayerItemResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9730722B1F4F12F200423313 /* ZZPlayerItemResource.swift */; };
 		973072301F4F14EC00423313 /* ZZPlayerViewConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9730722F1F4F14EC00423313 /* ZZPlayerViewConfig.swift */; };
+		97BD632D1F53DF26008C912C /* NavViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97BD632C1F53DF26008C912C /* NavViewController.swift */; };
 		FC09434E9EEDB1EFF2C858F1 /* Pods_ZZPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 848C251B5BEB5864D24E78BF /* Pods_ZZPlayer.framework */; };
 /* End PBXBuildFile section */
 
@@ -34,6 +35,7 @@
 		970491F91E83AC940032355B /* ZZPlayerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZZPlayerView.swift; sourceTree = "<group>"; };
 		9730722B1F4F12F200423313 /* ZZPlayerItemResource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZZPlayerItemResource.swift; sourceTree = "<group>"; };
 		9730722F1F4F14EC00423313 /* ZZPlayerViewConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZZPlayerViewConfig.swift; sourceTree = "<group>"; };
+		97BD632C1F53DF26008C912C /* NavViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NavViewController.swift; sourceTree = "<group>"; };
 		BC4790D36EB2E6DBE2557C61 /* Pods-ZZPlayer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZZPlayer.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ZZPlayer/Pods-ZZPlayer.debug.xcconfig"; sourceTree = "<group>"; };
 		FFBE554DBC24B56AD48D7740 /* Pods-ZZPlayer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZZPlayer.release.xcconfig"; path = "Pods/Target Support Files/Pods-ZZPlayer/Pods-ZZPlayer.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -83,6 +85,7 @@
 				970491E61E8396AD0032355B /* ZZPlayer */,
 				970491A21E8395F90032355B /* AppDelegate.swift */,
 				970491A41E8395F90032355B /* ViewController.swift */,
+				97BD632C1F53DF26008C912C /* NavViewController.swift */,
 				970491A61E8395F90032355B /* Main.storyboard */,
 				970491A91E8395F90032355B /* Assets.xcassets */,
 				970491AB1E8395F90032355B /* LaunchScreen.storyboard */,
@@ -245,6 +248,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				970491A51E8395F90032355B /* ViewController.swift in Sources */,
+				97BD632D1F53DF26008C912C /* NavViewController.swift in Sources */,
 				973072301F4F14EC00423313 /* ZZPlayerViewConfig.swift in Sources */,
 				970491A31E8395F90032355B /* AppDelegate.swift in Sources */,
 				9730722C1F4F12F200423313 /* ZZPlayerItemResource.swift in Sources */,
