@@ -150,6 +150,7 @@ class ZZPlayerView: UIView {
     
     /// 顶部背景图
     fileprivate let topBackgroundView = UIImageView()
+    
     /// 顶部返回
     fileprivate var backBtn: UIButton!
     
@@ -265,18 +266,22 @@ extension ZZPlayerView: ZZPlayerDelegate {
     func playerDidPlayToEnd(_ player: ZZPlayer) {
         if let playerItemResources = playerItemResources,
             playerItemResources.count > 1 {
-            // 多个视频播放结束
-            guard let index = playerItemResources.index(where: { (item) -> Bool in
-                return item.isEqual(playerItemResource)
-            }) else {
-                playToEnd(player: player)
-                return
-            }
-            // 如果是最后一个视频，结束播放，否则播放下一个视频
-            if index >= playerItemResources.count - 1 {
-                playToEnd(player: player)
+            if config.repeatMultipleItems && config.repeatSingleItem == false {
+                // 多个视频播放结束
+                guard let index = playerItemResources.index(where: { (item) -> Bool in
+                    return item.isEqual(playerItemResource)
+                }) else {
+                    playToEnd(player: player)
+                    return
+                }
+                // 如果是最后一个视频，结束播放，否则播放下一个视频
+                if index >= playerItemResources.count - 1 {
+                    playToEnd(player: player)
+                } else {
+                    next_piece()
+                }
             } else {
-                next_piece()
+                playToEnd(player: player)
             }
         } else {    // 单个视频播放结束
             playToEnd(player: player)
@@ -289,13 +294,18 @@ extension ZZPlayerView {
     /// 播放结束时
     fileprivate func playToEnd(player: ZZPlayer) {
         startTimeLabel.text = "00:00"
-        player.seekTo(time: 0)
-        if config.playEndStop {
-            playPauseBtn.setImage(config.bottom.playPausePlayImg, for: .normal)
-            player.pauseByUser()
+        
+        if config.repeatSingleItem {
+            let resource = self.playerItemResource
+            self.playerItemResource = resource
+            if config.showControlWhenPlayEnd {
+                showControlLaterHide()
+            }
         } else {
-            playPauseBtn.setImage(config.autoPlay ? config.bottom.playPausePlayImg : config.bottom.playPausePauseImg, for: .normal)
-            config.autoPlay ? player.play() : player.pauseByUser()
+            player.seekTo(time: 0)
+            if config.showControlWhenPlayEnd {
+                showControl()
+            }
         }
     }
     
@@ -304,17 +314,30 @@ extension ZZPlayerView {
     }
     
     // MARK: - 控制层的显示隐藏
-    fileprivate func showControl() {
+    fileprivate func showControlLaterHide() {
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         UIView.animate(withDuration: config.animateDuration, animations: {
             self.topView.alpha = 1
             self.bottomView.alpha = 1
             }) { (_) in
                 self.isControlShowing = true
+                self.hideControlLater()
+        }
+    }
+    
+    fileprivate func showControl() {
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
+        UIView.animate(withDuration: config.animateDuration, animations: {
+            self.topView.alpha = 1
+            self.bottomView.alpha = 1
+        }) { (_) in
+            self.isControlShowing = true
         }
     }
     
     /// 隐藏控制条
     @objc fileprivate func hideControl() {
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         UIView.animate(withDuration: config.animateDuration, animations: {
             self.topView.alpha = 0
             self.bottomView.alpha = 0
@@ -325,7 +348,6 @@ extension ZZPlayerView {
     
     /// 稍后隐藏控制条
     fileprivate func hideControlLater() {
-        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         perform(#selector(hideControl), with: nil, afterDelay: config.autoHideControlDuration)
     }
     
@@ -350,7 +372,7 @@ extension ZZPlayerView {
         }
         guard let player = player, let playerItem = player.currentPlayerItem else { return }
         
-        showControl()
+        showControlLaterHide()
         
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         
@@ -491,7 +513,7 @@ extension ZZPlayerView {
     /// 暂停、播放
     func play_pause() {
         guard let player = player else { return }
-
+        showControlLaterHide()
         if !player.isPaused {
             pause()
         } else {
@@ -542,7 +564,7 @@ extension ZZPlayerView {
     /// 处理进度
     func playProgress(sender: UISlider) {
         guard let player = player else { return }
-        
+        showControlLaterHide()
         player.seekTo(time: sender.value)
     }
     
@@ -555,7 +577,7 @@ extension ZZPlayerView {
     
     /// 点击手势，用来控制控制条的显示隐藏
     func tapAction() {
-        isControlShowing ? hideControlLater() : showControl()
+        isControlShowing ? hideControl() : showControlLaterHide()
     }
     
     

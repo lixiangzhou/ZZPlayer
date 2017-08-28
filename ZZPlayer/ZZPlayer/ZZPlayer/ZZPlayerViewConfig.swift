@@ -133,12 +133,16 @@ struct ZZPlayerViewConfig {
     
     /// 快进快退控制
     var quickProgressControlEnabled = false
-    
-    /// 最后的一个视频播放结束时是否停止播放, false 时会一直播放最后一个视频
-    var playEndStop = true
-    
+        
     /// 开始播放时是否自动播放，当播放结束时是否自动重新播放，优先级低于 playEndStop
     var autoPlay: Bool = true
+    
+    /// 重复播放控制
+    var repeatSingleItem = false
+    var repeatMultipleItems = true
+    
+    /// 播放结束时是否显示控制层
+    var showControlWhenPlayEnd = true
 }
 
 enum ZZPlayerViewTopConfigBackground {
