@@ -12,8 +12,9 @@ import AVFoundation
 class VideoModel: NSObject, ZZPlayerItemResource {
     var placeholderImage: UIImage?
     var placeholderImageUrl: String?
-    var title: String?
-    var videoUrlString: String?
+    var title: String
+    var videoUrlString: String
+    var seekTo: TimeInterval = 30
     
     init(title: String, videoUrlString: String) {
         self.title = title
@@ -35,7 +36,6 @@ class ViewController: UIViewController {
         tableView.register(ZZPlayerCell.self, forCellReuseIdentifier: "ID")
         tableView.dataSource = self
         tableView.rowHeight = 280
-        
         
         let vm = VideoModel(title: "测试标题", videoUrlString: "http://baobab.wdjcdn.com/14525705791193.mp4")
 

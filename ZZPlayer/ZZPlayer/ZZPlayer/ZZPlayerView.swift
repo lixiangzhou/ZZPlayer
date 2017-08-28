@@ -40,7 +40,7 @@ class ZZPlayerView: UIView {
         layoutIfNeeded()
     }
     
-    deinit {
+     deinit {
         NotificationCenter.default.removeObserver(self)
     }
     
@@ -61,12 +61,6 @@ class ZZPlayerView: UIView {
     
     /// 横屏配置
     var configHorizontal = ZZPlayerViewConfig()
-    
-    /// 最后的一个视频播放结束时是否停止播放, false 时会一直播放最后一个视频
-    var playEndStop = true
-    
-    /// 开始播放时是否自动播放，当播放结束时是否自动重新播放，优先级低于 playEndStop
-    var autoPlay: Bool = true
     
     /// 播放的资源
     var playerItemResource: ZZPlayerItemResource? {
@@ -90,7 +84,7 @@ class ZZPlayerView: UIView {
                 with: URL(string: playerItemResource.placeholderImageUrl ?? ""),
                 placeholder: playerItemResource.placeholderImage)
             
-            playPauseBtn.setImage(autoPlay ? config.bottom.playPausePauseImg : config.bottom.playPausePlayImg, for: .normal)
+            playPauseBtn.setImage(config.autoPlay ? config.bottom.playPausePauseImg : config.bottom.playPausePlayImg, for: .normal)
         }
     }
     /// 播放的资源数组
@@ -141,11 +135,16 @@ class ZZPlayerView: UIView {
     /// 开始屏幕亮度
     fileprivate var startBrightnessValue: CGFloat = 0
     
-    /// 在Cell中播放时播放器父View的tag值
+    /// 在Cell中播放时，播放器父View的tag值
     fileprivate var playerContainerTag = 0
     
     /// 在Cell中播放时，播放器所在的Cell
     fileprivate var playerInCell: UIView?
+    
+    /// 在Cell中播放时，播放器所在的UITableView或UICollectionView
+    fileprivate var playerScrllView: UIScrollView?
+    
+    fileprivate var playerPausedInCellReason = ZZCellPlayerStopReason.cellRectEdgeLeaveScrollView
     
     // MARK: - UI 属性
     
@@ -229,6 +228,11 @@ class ZZPlayerView: UIView {
     
     /// 背景
     fileprivate let backgroundImageView = UIImageView()
+    
+    enum ZZCellPlayerStopReason {
+        case cellRectNotInScrollView
+        case cellRectEdgeLeaveScrollView
+    }
 }
 
 // MARK: - ZZPlayerDelegate
@@ -247,13 +251,14 @@ extension ZZPlayerView: ZZPlayerDelegate {
     
     func player(_ player: ZZPlayer, willChange state: ZZPlayerState) {
         if state == .readyToPlay {
-            if autoPlay == false {
+            if config.autoPlay == false {
                 DispatchQueue.main.async {
                     self.player?.pauseByUser()
                 }
             } else {
                 hideControlLater()
             }
+            self.player?.seekTo(time: Float(self.playerItemResource!.seekTo))
         }
     }
     
@@ -285,12 +290,12 @@ extension ZZPlayerView {
     fileprivate func playToEnd(player: ZZPlayer) {
         startTimeLabel.text = "00:00"
         player.seekTo(time: 0)
-        if playEndStop {
+        if config.playEndStop {
             playPauseBtn.setImage(config.bottom.playPausePlayImg, for: .normal)
             player.pauseByUser()
         } else {
-            playPauseBtn.setImage(autoPlay ? config.bottom.playPausePlayImg : config.bottom.playPausePauseImg, for: .normal)
-            autoPlay ? player.play() : player.pauseByUser()
+            playPauseBtn.setImage(config.autoPlay ? config.bottom.playPausePlayImg : config.bottom.playPausePauseImg, for: .normal)
+            config.autoPlay ? player.play() : player.pauseByUser()
         }
     }
     
@@ -340,6 +345,9 @@ extension ZZPlayerView {
     
     /// 开始横向手势
     fileprivate func beginPanHorizontal(location: CGPoint) {
+        if config.quickProgressControlEnabled == false {
+            return
+        }
         guard let player = player, let playerItem = player.currentPlayerItem else { return }
         
         showControl()
@@ -363,6 +371,9 @@ extension ZZPlayerView {
     
     /// 处理横向手势
     fileprivate func panHorizontal(location: CGPoint) {
+        if config.quickProgressControlEnabled == false {
+            return
+        }
         let offsetX = location.x - panStartLocation.x
         // 滑满一屏最多是总时长的20%
         let offsetTime = offsetX / self.bounds.width * self.totalTime * 0.2
@@ -390,6 +401,9 @@ extension ZZPlayerView {
     
     /// 横向手势结束
     fileprivate func endHorizontal() {
+        if config.quickProgressControlEnabled == false {
+            return
+        }
         if pausedForPanGesture {
             play_pause()
         }
@@ -408,9 +422,13 @@ extension ZZPlayerView {
     fileprivate func beginPanVertical(location: CGPoint) {
         panVolume = location.x < bounds.midX
         if panVolume {
-            startVolumeValue = volumeSlider.value
+            if config.volumeControlEnabled {
+                startVolumeValue = volumeSlider.value
+            }
         } else {
-            startBrightnessValue = UIScreen.main.brightness
+            if config.brightnessControlEnabled {
+                startBrightnessValue = UIScreen.main.brightness
+            }
         }
     }
     
@@ -420,17 +438,21 @@ extension ZZPlayerView {
         let offsetProgress = offsetY / bounds.height
         
         if panVolume {
-            var newValue = startVolumeValue + Float(offsetProgress)
-            newValue = max(newValue, 0)
-            newValue = min(newValue, 1)
-            
-            volumeSlider.value = newValue
+            if config.volumeControlEnabled {
+                var newValue = startVolumeValue + Float(offsetProgress)
+                newValue = max(newValue, 0)
+                newValue = min(newValue, 1)
+                
+                volumeSlider.value = newValue
+            }
         } else {
-            var newValue = startBrightnessValue + offsetProgress
-            newValue = max(newValue, 0)
-            newValue = min(newValue, 1)
-            
-            UIScreen.main.brightness = newValue
+            if config.brightnessControlEnabled {
+                var newValue = startBrightnessValue + offsetProgress
+                newValue = max(newValue, 0)
+                newValue = min(newValue, 1)
+                
+                UIScreen.main.brightness = newValue
+            }
         }
     }
 }
@@ -448,21 +470,35 @@ extension ZZPlayerView {
         print(#function)
     }
     
+    func play() {
+        guard let player = player else { return }
+        playPauseBtn.setImage(config.bottom.playPausePauseImg, for: .normal)
+        player.play()
+    }
+    
+    func pause() {
+        guard let player = player else { return }
+        playPauseBtn.setImage(config.bottom.playPausePlayImg, for: .normal)
+        player.pauseByUser()
+    }
+    
+    func pauseInCell() {
+        pause()
+        removeFromSuperview()
+        removeScrollViewObserver()
+    }
     
     /// 暂停、播放
     func play_pause() {
         guard let player = player else { return }
 
         if !player.isPaused {
-            playPauseBtn.setImage(config.bottom.playPausePlayImg, for: .normal)
-            player.pauseByUser()
+            pause()
         } else {
-            playPauseBtn.setImage(config.bottom.playPausePauseImg, for: .normal)
-            player.play()
+            play()
             hideControlLater()
         }
     }
-    
     
     /// 下一首
     func next_piece() {
@@ -561,25 +597,73 @@ extension ZZPlayerView {
 
 // MARK: - Cell 中播放
 extension ZZPlayerView {
-    func play(resource: ZZPlayerItemResource, inCell cell: UIView, withPlayerContainerTag tag: Int) {
+    func play(resource: ZZPlayerItemResource, inCell cell: UIView, withPlayerContainerTag tag: Int, playerStopReason: ZZCellPlayerStopReason = .cellRectEdgeLeaveScrollView) {
         playerInCell = cell
         playerContainerTag = tag
+        playerPausedInCellReason = playerStopReason
         
         playerItemResource = resource
         
-        print(player)
-        print(cell.viewWithTag(tag))
-        guard let player = player,
-            let playerContainerView = cell.viewWithTag(tag) else { return }
+        guard let playerContainerView = cell.viewWithTag(tag) else { return }
         
         playerContainerView.addSubview(self)
         
         self.snp.remakeConstraints({ (maker) in
             maker.edges.equalToSuperview()
         })
+        
+        removeScrollViewObserver()
+        playerScrllView = scrollView
+        playerScrllView?.addObserver(self, forKeyPath: "contentOffset", options: .new, context: nil)
     }
     
+    var scrollView: UIScrollView? {
+        var view = playerInCell?.superview
+        while view != nil && (view is UITableView == false) && (view is UICollectionView == false) {
+            view = view?.superview
+        }
+        return view as? UIScrollView
+    }
+    
+    fileprivate func removeScrollViewObserver() {
+        if playerScrllView != nil {
+            playerScrllView?.removeObserver(self, forKeyPath: "contentOffset", context: nil)
+            playerScrllView = nil
+        }
+    }
+    
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        
+        if let scrollView = object as? UIScrollView,
+            let superView = scrollView.superview,
+            let cell = playerInCell {
+            
+            let scrollFrame = scrollView.frame
+            let cellFrame = cell.convert(cell.bounds, to: superView)
+            
+            print("scrollView \(scrollFrame)")
+            print("cell \(cellFrame)")
+            
+            let cellY = cellFrame.origin.y
+            let cellMaxY = cellFrame.maxY
+            
+            let scrollY = scrollFrame.origin.y
+            let scrollMaxY = scrollFrame.maxY
+            
+            switch playerPausedInCellReason {
+            case .cellRectEdgeLeaveScrollView:
+                if cellMaxY < scrollY || cellY > scrollMaxY {
+                    pauseInCell()
+                }
+            case .cellRectNotInScrollView:
+                if cellY < scrollY || cellMaxY > scrollMaxY {
+                    pauseInCell()
+                }
+            }
+        }
+    }
 }
+
 
 // MARK: - UI
 extension ZZPlayerView {
@@ -852,6 +936,7 @@ extension ZZPlayerView {
     }
     
     fileprivate func updateMid() {
+        
         panPlayingStateView.isHidden = config.center.hidden
         
         panPlayingStateTimeLabel.font = config.center.timeFont

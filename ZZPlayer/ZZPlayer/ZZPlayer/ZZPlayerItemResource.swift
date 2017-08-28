@@ -10,8 +10,9 @@ import UIKit
 
 /// 播放的 item 必须遵循的协议
 @objc protocol ZZPlayerItemResource: NSObjectProtocol {
-    var title: String? { get set }
-    var videoUrlString: String? { get set }
+    var title: String { get set }
+    var videoUrlString: String { get set }
     var placeholderImage: UIImage? { get set }
     var placeholderImageUrl: String?  { get set }
+    var seekTo: TimeInterval { get set }
 }

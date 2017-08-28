@@ -126,6 +126,19 @@ struct ZZPlayerViewConfig {
     /// 控制层显示时长设置
     var autoHideControlDuration: TimeInterval = 4
     var animateDuration: TimeInterval = 0.5
+    
+    /// 音量和亮度控制
+    var volumeControlEnabled = true
+    var brightnessControlEnabled = true
+    
+    /// 快进快退控制
+    var quickProgressControlEnabled = false
+    
+    /// 最后的一个视频播放结束时是否停止播放, false 时会一直播放最后一个视频
+    var playEndStop = true
+    
+    /// 开始播放时是否自动播放，当播放结束时是否自动重新播放，优先级低于 playEndStop
+    var autoPlay: Bool = true
 }
 
 enum ZZPlayerViewTopConfigBackground {
