@@ -71,7 +71,15 @@ class ZZPlayerView: UIView {
     /// 播放的资源
     var playerItemResource: ZZPlayerItemResource? {
         didSet {
-            guard let playerItemResource = playerItemResource else { return }
+            guard let playerItemResource = playerItemResource else {
+                player?.playerItemResource = nil
+                validResource = false
+                titleLabel.text = ""
+                startTimeLabel.text = "00:00"
+                totalTimeLabel.text = "00:00"
+                return
+            }
+            validResource = true
             
             titleLabel.text = playerItemResource.title
             
@@ -169,6 +177,9 @@ class ZZPlayerView: UIView {
     /// 在Cell中播放时，停止播放的原因
     fileprivate var playerPausedInCellReason = ZZCellPlayerStopReason.cellRectEdgeLeaveScrollView
     
+    /// 资源是否有效
+    fileprivate var validResource = true
+    
     // MARK: - UI 属性
     
     /// 顶部背景图
@@ -262,7 +273,6 @@ class ZZPlayerView: UIView {
 // MARK: - ZZPlayerDelegate
 extension ZZPlayerView: ZZPlayerDelegate {
     func player(_ player: ZZPlayer, playTime: Int, totalTime: Int) {
-        
         startTimeLabel.text = transform(time: playTime)
         totalTimeLabel.text = transform(time: totalTime)
         sliderView.maximumValue = Float(totalTime)
@@ -442,6 +452,8 @@ extension ZZPlayerView {
         perform(#selector(hideControl), with: nil, afterDelay: config.autoHideControlDuration)
     }
     
+    
+    /// 显示状态栏
     fileprivate func showStatusBar() {
         switch config.statusBarShowMode {
         case .alwaysShow:
@@ -458,6 +470,7 @@ extension ZZPlayerView {
         controller?.setNeedsStatusBarAppearanceUpdate()
     }
     
+    /// 隐藏状态栏
     fileprivate func hideStatusBar() {
         switch config.statusBarShowMode {
         case .alwaysShow:
@@ -493,7 +506,7 @@ extension ZZPlayerView {
     
     /// 开始横向手势
     fileprivate func beginPanHorizontal(location: CGPoint) {
-        if config.quickProgressControlEnabled == false {
+        if config.quickProgressControlEnabled == false && validResource == false {
             return
         }
         guard let player = player, let playerItem = player.currentPlayerItem else { return }
@@ -519,7 +532,7 @@ extension ZZPlayerView {
     
     /// 处理横向手势
     fileprivate func panHorizontal(location: CGPoint) {
-        if config.quickProgressControlEnabled == false {
+        if config.quickProgressControlEnabled == false && validResource == false {
             return
         }
         let offsetX = location.x - panStartLocation.x
@@ -549,7 +562,7 @@ extension ZZPlayerView {
     
     /// 横向手势结束
     fileprivate func endHorizontal() {
-        if config.quickProgressControlEnabled == false {
+        if config.quickProgressControlEnabled == false && validResource == false {
             return
         }
         if pausedForPanGesture {
@@ -607,6 +620,12 @@ extension ZZPlayerView {
 
 // MARK: - 功能方法
 extension ZZPlayerView {
+    func reset() {
+        removeFromSuperview()
+        player?.pausedByOtherReasons()
+        self.playerItemResource = nil
+    }
+    
     // 返回
     func back() {
         if isFullScreen {
@@ -688,7 +707,7 @@ extension ZZPlayerView {
     
     
     /// 处理进度
-    func playProgress(sender: UISlider) {
+    @objc fileprivate func playProgress(sender: UISlider) {
         guard let player = player else { return }
         showControlLaterHide()
         player.seekTo(time: sender.value)
@@ -696,19 +715,19 @@ extension ZZPlayerView {
     
     
     /// 进度结束
-    func playProgressLeave(sender: UISlider) {
+    @objc fileprivate func playProgressLeave(sender: UISlider) {
         hideControlLater()
     }
     
     
     /// 点击手势，用来控制控制条的显示隐藏
-    func tapAction() {
+    @objc fileprivate func tapAction() {
         isControlShowing ? hideControl() : showControlLaterHide()
     }
     
     
     /// 滑动手势，用来控制音量、亮度、快进、快退
-    func panAction(pan: UIPanGestureRecognizer) {
+    @objc fileprivate func panAction(pan: UIPanGestureRecognizer) {
         let location = pan.location(in: self)
         
         if bounds.contains(location) == false {
@@ -765,7 +784,7 @@ extension ZZPlayerView {
         playerScrllView?.addObserver(self, forKeyPath: "contentOffset", options: .new, context: nil)
     }
     
-    var scrollView: UIScrollView? {
+    fileprivate var scrollView: UIScrollView? {
         var view = playerInCell?.superview
         while view != nil && (view is UITableView == false) && (view is UICollectionView == false) {
             view = view?.superview

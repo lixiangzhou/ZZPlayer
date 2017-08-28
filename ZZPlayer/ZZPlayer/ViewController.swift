@@ -35,6 +35,7 @@ class ViewController: UIViewController {
         view.addSubview(tableView)
         tableView.register(ZZPlayerCell.self, forCellReuseIdentifier: "ID")
         tableView.dataSource = self
+        tableView.delegate = self
         tableView.rowHeight = 280
         
         tableView.snp.makeConstraints { (maker) in
@@ -60,9 +61,18 @@ class ViewController: UIViewController {
     override var prefersStatusBarHidden: Bool {
         return ZZPlayerView.shared.config.statusBarHidden
     }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        ZZPlayerView.shared.reset()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+    }
 }
 
-extension ViewController: UITableViewDataSource {
+extension ViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return datas.count
     }
@@ -73,6 +83,9 @@ extension ViewController: UITableViewDataSource {
         return cell
     }
     
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        navigationController?.pushViewController(DetailViewController(), animated: true)
+    }
 }
 
 class ZZPlayerCell: UITableViewCell {
@@ -81,6 +94,9 @@ class ZZPlayerCell: UITableViewCell {
     
     override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        
+        selectionStyle = .none
+        
         let imgView = UIImageView(image: UIImage(named: "cell_bg"))
         imgView.isUserInteractionEnabled = true
         imgView.tag = 101

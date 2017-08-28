@@ -99,15 +99,12 @@ class ZZPlayer: UIView {
     /// 播放资源
     var playerItemResource: ZZPlayerItemResource? {
         didSet {
-
-            if playerItemResource == nil {
-                return
-            }
-            
             guard let videoUrlString = playerItemResource?.videoUrlString,
                 let videoUrl = URL(string: videoUrlString) else {
+                    validResource = false
                 return
             }
+            validResource = true
             
             removeObservers()
             
@@ -154,6 +151,9 @@ class ZZPlayer: UIView {
     
     /// 当前播放的Item
     var currentPlayerItem: AVPlayerItem? {
+        if validResource == false {
+            return nil
+        }
         return playerLayer?.player?.currentItem
     }
     // MARK: - Private
@@ -168,7 +168,9 @@ class ZZPlayer: UIView {
         didSet {
             guard let playerLayer = playerLayer,
                 let player = playerLayer.player,
-                oldValue != state else {
+                oldValue != state,
+                validResource else {
+                    state = .idle
                 return
             }
             
@@ -200,6 +202,9 @@ class ZZPlayer: UIView {
     
     /// 是否在缓冲
     fileprivate var isBuffering = false
+    
+    /// 资源是否有效
+    fileprivate var validResource = true
 }
 
 
@@ -230,6 +235,9 @@ extension ZZPlayer {
     ///
     /// - Parameter time: 播放的时间
     func seekTo(time: Float) {
+        if validResource == false {
+            return
+        }
         playerLayer?.player?.seek(to: CMTime(value: CMTimeValue(time), timescale: 1), toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero) {_ in 
             if self.pausedByUser {
                 return
@@ -244,6 +252,10 @@ extension ZZPlayer {
 extension ZZPlayer {
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        
+        if validResource == false {
+            return
+        }
         
         guard let playerItem = currentPlayerItem else {
             return
@@ -311,7 +323,7 @@ extension ZZPlayer {
     
     /// 处理时间
     fileprivate func processPlayTime(_ playerItem: AVPlayerItem) {
-        if playerItem.seekableTimeRanges.count > 0 && playerItem.duration.timescale != 0 {
+        if validResource && playerItem.seekableTimeRanges.count > 0 && playerItem.duration.timescale != 0 {
             let playTime = Int(CMTimeGetSeconds(playerItem.currentTime()))
             let totalTime = Int(CMTimeGetSeconds(playerItem.duration))
             self.delegate?.player(self, playTime: playTime, totalTime: totalTime)
@@ -321,6 +333,9 @@ extension ZZPlayer {
     
     /// 数据缓冲
     fileprivate func bufferDatas() {
+        if validResource == false {
+            return
+        }
         if isBuffering {
             return
         }
