@@ -8,7 +8,7 @@
 
 import UIKit
 
-struct ZZPlayerViewTopConfig {
+class ZZPlayerViewTopConfig {
     
     var hidden = false
     var height: CGFloat = 40
@@ -31,7 +31,7 @@ struct ZZPlayerViewTopConfig {
                                                offsetY: 0)
 }
 
-struct ZZPlayerViewBottomConfig {
+class ZZPlayerViewBottomConfig {
     var hidden = false
     var height: CGFloat = 30
     
@@ -94,10 +94,14 @@ struct ZZPlayerViewBottomConfig {
     
     /// 播放进度设置
     var slider = ZZPlayerViewTopConfigSlider(thumbImage: zz_bundleImage("zz_player_slider"),
-                                             minimumTrackTintColor: UIColor(red: 45 / 255.0, green: 186 / 255.0, blue: 247 / 255.0, alpha: 1), maximumTrackTintColor: UIColor.clear, leftPadding: 5, rightPadding: 5, offsetY: 0)
+                                             minimumTrackTintColor: UIColor(red: 45 / 255.0, green: 186 / 255.0, blue: 247 / 255.0, alpha: 1),
+                                             maximumTrackTintColor: UIColor.clear,
+                                             leftPadding: 5,
+                                             rightPadding: 5,
+                                             offsetY: 0)
 }
 
-struct ZZPlayerViewCenterConfig {
+class ZZPlayerViewCenterConfig {
     var width: CGFloat = 100
     var hidden = false
     
@@ -117,7 +121,7 @@ struct ZZPlayerViewCenterConfig {
     var backImage = zz_bundleImage("zz_player_quickback")
 }
 
-struct ZZPlayerViewConfig {
+class ZZPlayerViewConfig {
     var top = ZZPlayerViewTopConfig()
     var bottom = ZZPlayerViewBottomConfig()
     var center = ZZPlayerViewCenterConfig()
@@ -143,6 +147,8 @@ struct ZZPlayerViewConfig {
     
     /// 播放结束时是否显示控制层
     var showControlWhenPlayEnd = true
+    
+    var statusBarStyle = UIStatusBarStyle.lightContent
 }
 
 enum ZZPlayerViewTopConfigBackground {
@@ -150,22 +156,36 @@ enum ZZPlayerViewTopConfigBackground {
     case gradientLayer(UIColor, UIColor)
 }
 
-struct ZZPlayerViewTopConfigLabel {
+class ZZPlayerViewTopConfigLabel {
     var font = UIFont.systemFont(ofSize: 14)
     var color = UIColor.white
     var leftPadding: CGFloat = 5
     var rightPadding: CGFloat = 20
     var offsetY: CGFloat = 0
+    
+    init(font: UIFont, color: UIColor, leftPadding: CGFloat, rightPadding: CGFloat, offsetY: CGFloat) {
+        self.font = font
+        self.color = color
+        self.leftPadding = leftPadding
+        self.rightPadding = rightPadding
+        self.offsetY = offsetY
+    }
 }
 
-struct ZZPlayerViewTopConfigProgress {
+class ZZPlayerViewTopConfigProgress {
     var trackTintColor = UIColor(white: 1, alpha: 0.5)
     var progressTintColor = UIColor(white: 1, alpha: 0.7)
     
     var height: CGFloat = 2
+    
+    init(trackTintColor: UIColor, progressTintColor: UIColor, height: CGFloat) {
+        self.trackTintColor = trackTintColor
+        self.progressTintColor = progressTintColor
+        self.height = height
+    }
 }
 
-struct ZZPlayerViewTopConfigSlider {
+class ZZPlayerViewTopConfigSlider {
     var thumbImage = zz_bundleImage("zz_player_slider")
     var minimumTrackTintColor = UIColor(red: 45 / 255.0, green: 186 / 255.0, blue: 247 / 255.0, alpha: 1)
     var maximumTrackTintColor = UIColor.clear
@@ -173,14 +193,31 @@ struct ZZPlayerViewTopConfigSlider {
     var leftPadding: CGFloat = 5
     var rightPadding: CGFloat = 20
     var offsetY: CGFloat = 0
+    
+    init(thumbImage: UIImage?, minimumTrackTintColor: UIColor, maximumTrackTintColor: UIColor, leftPadding: CGFloat, rightPadding: CGFloat, offsetY: CGFloat) {
+        self.thumbImage = thumbImage
+        self.minimumTrackTintColor = minimumTrackTintColor
+        self.maximumTrackTintColor = maximumTrackTintColor
+        self.leftPadding = leftPadding
+        self.rightPadding = rightPadding
+        self.offsetY = offsetY
+    }
 }
 
-struct ZZPlayerViewTopConfigButton {
+class ZZPlayerViewTopConfigButton {
     var image = zz_bundleImage("zz_player_play_back_full")
     var leftPadding: CGFloat = 5
     var rightPadding: CGFloat = 20
     var size = CGSize(width: 30, height: 30)
     var offsetY: CGFloat = 0
+    
+    init(image: UIImage?, leftPadding: CGFloat, rightPadding: CGFloat, size: CGSize, offsetY: CGFloat) {
+        self.image = image
+        self.leftPadding = leftPadding
+        self.rightPadding = rightPadding
+        self.size = size
+        self.offsetY = offsetY
+    }
 }
 
 
