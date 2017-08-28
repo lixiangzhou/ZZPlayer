@@ -8,6 +8,7 @@
 
 import UIKit
 
+// MARK: - Config
 class ZZPlayerViewTopConfig {
     
     var hidden = false
@@ -33,7 +34,7 @@ class ZZPlayerViewTopConfig {
 
 class ZZPlayerViewBottomConfig {
     var hidden = false
-    var height: CGFloat = 30
+    var height: CGFloat = 44
     
     /// 背景
     var background = ZZPlayerViewTopConfigBackground.gradientLayer(UIColor.clear, UIColor(red: 0, green: 0, blue: 0, alpha: 0.9))
@@ -148,9 +149,17 @@ class ZZPlayerViewConfig {
     /// 播放结束时是否显示控制层
     var showControlWhenPlayEnd = true
     
-    var statusBarStyle = UIStatusBarStyle.lightContent
+    
+    /// 状态条样式
+    var statusBarStyle = UIStatusBarStyle.default
+    
+    /// 状态条全屏模式的显示隐藏
+    var statusBarShowMode = ZZPlayerStatusBarShowMode.alwaysShow
+    /// 状态条显示隐藏
+    var statusBarHidden = false
 }
 
+// MARK: - UI
 enum ZZPlayerViewTopConfigBackground {
     case image(UIImage)
     case gradientLayer(UIColor, UIColor)
@@ -221,10 +230,15 @@ class ZZPlayerViewTopConfigButton {
 }
 
 
-func zz_bundleImage(_ imgName: String) -> UIImage? {
+// MARK: - Helper
+enum ZZPlayerStatusBarShowMode {
+    case alwaysShow, alwaysHide, showHide
+}
+
+private func zz_bundleImage(_ imgName: String) -> UIImage? {
     return UIImage(named: zz_bundleImageName(imgName))
 }
 
-func zz_bundleImageName(_ imgName: String) -> String {
+private func zz_bundleImageName(_ imgName: String) -> String {
     return "ZZPlayer.bundle/" + imgName
 }
