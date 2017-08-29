@@ -240,6 +240,9 @@ class ZZPlayerView: UIView {
     /// pan手势控制快进、快退的时间
     fileprivate var panPlayingStateTimeLabel: UILabel!
     
+    /// 缓冲加载
+    fileprivate var loadingView = UIActivityIndicatorView(activityIndicatorStyle: .whiteLarge)
+    
     // MARK: -
     // 滑动屏幕时 音量/亮度控制
     fileprivate var volumeSlider: UISlider = {
@@ -294,6 +297,7 @@ extension ZZPlayerView: ZZPlayerDelegate {
             }
             self.player?.seekTo(time: Float(self.playerItemResource!.seekTo))
         }
+        state == .buffering ? loadingView.startAnimating() : loadingView.stopAnimating()
     }
     
     func playerDidPlayToEnd(_ player: ZZPlayer) {
@@ -506,7 +510,7 @@ extension ZZPlayerView {
     
     /// 开始横向手势
     fileprivate func beginPanHorizontal(location: CGPoint) {
-        if config.quickProgressControlEnabled == false && validResource == false {
+        if config.quickProgressControlEnabled == false || validResource == false {
             return
         }
         guard let player = player, let playerItem = player.currentPlayerItem else { return }
@@ -532,7 +536,7 @@ extension ZZPlayerView {
     
     /// 处理横向手势
     fileprivate func panHorizontal(location: CGPoint) {
-        if config.quickProgressControlEnabled == false && validResource == false {
+        if config.quickProgressControlEnabled == false || validResource == false {
             return
         }
         let offsetX = location.x - panStartLocation.x
@@ -562,7 +566,7 @@ extension ZZPlayerView {
     
     /// 横向手势结束
     fileprivate func endHorizontal() {
-        if config.quickProgressControlEnabled == false && validResource == false {
+        if config.quickProgressControlEnabled == false || validResource == false {
             return
         }
         if pausedForPanGesture {
@@ -650,8 +654,7 @@ extension ZZPlayerView {
     }
     
     func pauseInCell() {
-        pause()
-        removeFromSuperview()
+        reset()
         removeScrollViewObserver()
     }
     
@@ -843,6 +846,12 @@ extension ZZPlayerView {
     
     private func setMidView() {
         setPanPlayingStateView()
+        
+        loadingView.hidesWhenStopped = true
+        addSubview(loadingView)
+        loadingView.snp.makeConstraints { (maker) in
+            maker.center.equalTo(self)
+        }
     }
     
     private func setPanPlayingStateView() {
