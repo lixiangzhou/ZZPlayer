@@ -135,10 +135,7 @@ class ZZPlayer: UIView {
     
     /// 是否正在播放，不可用作播放状态判断
     var isPlaying: Bool {
-        if currentPlayerItem != nil {
-            return state == .playing
-        }
-        return false
+        return currentPlayerItem != nil && state == .playing
     }
     
     /// 是否停止播放，可用作播放状态判断
@@ -158,13 +155,13 @@ class ZZPlayer: UIView {
     }
     // MARK: - Private
     /// 播放层
-    fileprivate var playerLayer: AVPlayerLayer?
+    private var playerLayer: AVPlayerLayer?
     
     /// 是否由用户点击暂停还是由其他的原因（如没有缓冲好数据）
-    fileprivate var pausedByUser = false
+    private var pausedByUser = false
     
     /// 播放状态
-    fileprivate var state: ZZPlayerState = .idle {
+    private var state: ZZPlayerState = .idle {
         didSet {
             guard let playerLayer = playerLayer,
                 let player = playerLayer.player,
@@ -182,16 +179,12 @@ class ZZPlayer: UIView {
             case .readyToPlay:  // 准备好了播放
                 state = .playing
                 player.play()
-                break
             case .buffering:    // 缓冲中
                 bufferDatas()
-                break
             case .playing:      // 播放中
                 player.play()
-                break
             case .paused:       // 暂停
                 player.pause()
-                break
             case .failed:       // 失败
                 break
             }
@@ -201,10 +194,10 @@ class ZZPlayer: UIView {
     }
     
     /// 是否在缓冲
-    fileprivate var isBuffering = false
+    private var isBuffering = false
     
     /// 资源是否有效
-    fileprivate var validResource = true
+    private var validResource = true
 }
 
 
@@ -238,7 +231,7 @@ extension ZZPlayer {
         if validResource == false {
             return
         }
-        playerLayer?.player?.seek(to: CMTime(value: CMTimeValue(time), timescale: 1), toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero) {_ in 
+        playerLayer?.player?.seek(to: CMTime(value: CMTimeValue(time), timescale: 1), toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero) {_ in
             if self.pausedByUser {
                 return
             }
@@ -262,9 +255,9 @@ extension ZZPlayer {
         }
         
         if keyPath == ZZPlayerObseredKeyPath.status.rawValue {
-            let status: AVPlayerItemStatus
+            let status: AVPlayerItem.Status
             if let statusNumber = change?[.newKey] as? NSNumber {
-                status = AVPlayerItemStatus(rawValue: statusNumber.intValue)!
+                status = AVPlayerItem.Status(rawValue: statusNumber.intValue)!
             } else {
                 status = .unknown
             }
@@ -277,13 +270,14 @@ extension ZZPlayer {
                 state = .failed
             case .unknown:
                 state = .idle
+            @unknown default:
+                fatalError()
             }
             
             playerLayer?.player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC)), queue: nil, using: { time in
                 self.processPlayTime(playerItem)
             })
-        }
-        else if keyPath == ZZPlayerObseredKeyPath.loadedTimeRanges.rawValue {
+        } else if keyPath == ZZPlayerObseredKeyPath.loadedTimeRanges.rawValue {
             guard let timeRange = playerItem.loadedTimeRanges.first?.timeRangeValue else {
                 return
             }
@@ -295,21 +289,19 @@ extension ZZPlayer {
             let totalTime = Int(CMTimeGetSeconds(playerItem.duration))
             
             delegate?.player(self, bufferedTime: bufferedTime, totalTime: totalTime)
-        }
-        else if keyPath == ZZPlayerObseredKeyPath.playbackBufferEmpty.rawValue {
+        } else if keyPath == ZZPlayerObseredKeyPath.playbackBufferEmpty.rawValue {
             
             if playerItem.isPlaybackBufferEmpty {
                 pausedByOtherReasons()
                 state = .buffering
             }
             
-        }
-        else if keyPath == ZZPlayerObseredKeyPath.playbackLikelyToKeepUp.rawValue {
+        } else if keyPath == ZZPlayerObseredKeyPath.playbackLikelyToKeepUp.rawValue {
         }
     }
     
     
-    func didPlayToEnd(note: Notification) {
+    @objc func didPlayToEnd(note: Notification) {
         self.delegate?.playerDidPlayToEnd(self)
     }
 }
@@ -317,12 +309,12 @@ extension ZZPlayer {
 // MARK: - Helper
 extension ZZPlayer {
     
-    fileprivate func initialize() {
+    private func initialize() {
         
     }
     
     /// 处理时间
-    fileprivate func processPlayTime(_ playerItem: AVPlayerItem) {
+    private func processPlayTime(_ playerItem: AVPlayerItem) {
         if validResource && playerItem.seekableTimeRanges.count > 0 && playerItem.duration.timescale != 0 {
             let playTime = Int(CMTimeGetSeconds(playerItem.currentTime()))
             let totalTime = Int(CMTimeGetSeconds(playerItem.duration))
@@ -332,7 +324,7 @@ extension ZZPlayer {
     
     
     /// 数据缓冲
-    fileprivate func bufferDatas() {
+    private func bufferDatas() {
         if validResource == false {
             return
         }
@@ -364,7 +356,7 @@ extension ZZPlayer {
     }
     
     /// 有在播放的item, 就取消该 item 的监听操作
-    fileprivate func removeObservers() {
+    private func removeObservers() {
         if let playerItem = currentPlayerItem {
             NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
             

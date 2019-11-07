@@ -22,7 +22,7 @@ class ZZPlayerView: UIView {
         
         setupUI()
         
-        NotificationCenter.default.addObserver(self, selector: #selector(orientationChanged), name: NSNotification.Name.UIDeviceOrientationDidChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(orientationChanged), name: UIDevice.orientationDidChangeNotification, object: nil)
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapAction))
         addGestureRecognizer(tap)
@@ -87,9 +87,9 @@ class ZZPlayerView: UIView {
                 player = ZZPlayer.shared
                 player?.delegate = self
                 insertSubview(player!, at: 0)
-                player?.snp.makeConstraints({ (maker) in
+                player?.snp.makeConstraints { (maker) in
                     maker.edges.equalTo(self)
-                })
+                }
             }
             
             player!.playerItemResource = playerItemResource
@@ -116,48 +116,48 @@ class ZZPlayerView: UIView {
     
     // MARK: - Private
     /// 是否全屏
-    fileprivate var isFullScreen = false
+    private var isFullScreen = false
     
     /// 播放器
-    fileprivate var player: ZZPlayer?
+    private var player: ZZPlayer?
     
     /// 是否显示控制条
-    fileprivate var isControlShowing = true
+    private var isControlShowing = true
     
     // 屏幕滑动调整播放进度相关
-    fileprivate var panStartLocation = CGPoint.zero
+    private var panStartLocation = CGPoint.zero
     
     /// 播放总时间
-    fileprivate var totalTime: CGFloat = 0
+    private var totalTime: CGFloat = 0
     
     /// pan手势开始时间
-    fileprivate var panStartTime: CGFloat = 0
+    private var panStartTime: CGFloat = 0
     
     /// 因手势暂停播放
-    fileprivate var pausedForPanGesture = true
+    private var pausedForPanGesture = true
     
     /// pan手势是否横向
-    fileprivate var panHorizontal = true
+    private var panHorizontal = true
     
     /// pan手势是音量
-    fileprivate var panVolume = true
+    private var panVolume = true
     
     /// 开始音量
-    fileprivate var startVolumeValue: Float = 0
+    private var startVolumeValue: Float = 0
     
     /// 开始屏幕亮度
-    fileprivate var startBrightnessValue: CGFloat = 0
+    private var startBrightnessValue: CGFloat = 0
     
     /// 播放器所在的父View
-    fileprivate var containerView: UIView!
+    private var containerView: UIView!
     
     /// 应用的rootView
-    fileprivate var rootView: UIView {
+    private var rootView: UIView {
         return UIApplication.shared.keyWindow!.rootViewController!.view
     }
     
     /// 播放器所在的控制器
-    fileprivate var controller: UIViewController? {
+    private var controller: UIViewController? {
         var responder = next
         while responder != nil && (responder! is UIViewController == false) {
             responder = responder!.next
@@ -166,86 +166,86 @@ class ZZPlayerView: UIView {
     }
     
     /// 在Cell中播放时，播放器父View的tag值
-    fileprivate var playerContainerTag = 0
+    private var playerContainerTag = 0
     
     /// 在Cell中播放时，播放器所在的Cell
-    fileprivate var playerInCell: UIView?
+    private var playerInCell: UIView?
     
     /// 在Cell中播放时，播放器所在的UITableView或UICollectionView
-    fileprivate var playerScrllView: UIScrollView?
+    private var playerScrollView: UIScrollView?
     
     /// 在Cell中播放时，停止播放的原因
-    fileprivate var playerPausedInCellReason = ZZCellPlayerStopReason.cellRectEdgeLeaveScrollView
+    private var playerPausedInCellReason = ZZCellPlayerStopReason.cellRectEdgeLeaveScrollView
     
     /// 资源是否有效
-    fileprivate var validResource = true
+    private var validResource = true
     
     // MARK: - UI 属性
     
     /// 顶部背景图
-    fileprivate let topBackgroundView = UIImageView()
+    private let topBackgroundView = UIImageView()
     
     /// 顶部返回
-    fileprivate var backBtn: UIButton!
+    private var backBtn: UIButton!
     
     /// 标题
-    fileprivate var titleLabel: UILabel!
+    private var titleLabel: UILabel!
     
     
     // MARK: -
     /// 底部
     
-    fileprivate let bottomBackgroundView = UIImageView()
+    private let bottomBackgroundView = UIImageView()
     
     /// 播放、暂停按钮
-    fileprivate var playPauseBtn: UIButton!
+    private var playPauseBtn: UIButton!
 
     /// 全屏按钮
-    fileprivate var fullScreenBtn: UIButton!
+    private var fullScreenBtn: UIButton!
     
     /// 下一首按钮
-    fileprivate var nextBtn: UIButton!
+    private var nextBtn: UIButton!
 
     /// 缓冲进度条
-    fileprivate let progressView = UIProgressView()
+    private let progressView = UIProgressView()
     
     /// 播放进度条
-    fileprivate let sliderView = UISlider()
+    private let sliderView = UISlider()
     
     /// 开始时间
-    fileprivate var startTimeLabel: UILabel!
+    private var startTimeLabel: UILabel!
     
     /// 总时间
-    fileprivate var totalTimeLabel: UILabel!
+    private var totalTimeLabel: UILabel!
     
     // MARK: -
     // 顶部底部的透明层
     
     /// 顶部渐变层
-    fileprivate var topGradientLayer: CAGradientLayer!
+    private var topGradientLayer: CAGradientLayer!
     
     /// 底部渐变层
-    fileprivate var bottomGradientLayer: CAGradientLayer!
+    private var bottomGradientLayer: CAGradientLayer!
     
     // MARK: -
     
     /// 滑动屏幕时 播放进度控制
     
     /// pan手势控制快进、快退的View
-    fileprivate let panPlayingStateView = UIView()
+    private let panPlayingStateView = UIView()
     
     /// pan手势控制快进、快退的图标
-    fileprivate var panPlayingStateImgView: UIImageView!
+    private var panPlayingStateImgView: UIImageView!
     
     /// pan手势控制快进、快退的时间
-    fileprivate var panPlayingStateTimeLabel: UILabel!
+    private var panPlayingStateTimeLabel: UILabel!
     
     /// 缓冲加载
-    fileprivate var loadingView = UIActivityIndicatorView(activityIndicatorStyle: .whiteLarge)
+    private var loadingView = UIActivityIndicatorView(style: .whiteLarge)
     
     // MARK: -
     // 滑动屏幕时 音量/亮度控制
-    fileprivate var volumeSlider: UISlider = {
+    private var volumeSlider: UISlider = {
         var slider: UISlider?
         for sub in MPVolumeView().subviews {
             if sub is UISlider {
@@ -259,13 +259,13 @@ class ZZPlayerView: UIView {
     // MARK: -
     
     /// 顶部View
-    fileprivate let topView = UIView()
+    private let topView = UIView()
     
     /// 底部View
-    fileprivate let bottomView = UIView()
+    private let bottomView = UIView()
     
     /// 背景
-    fileprivate let backgroundImageView = UIImageView()
+    private let backgroundImageView = UIImageView()
     
     enum ZZCellPlayerStopReason {
         case cellRectNotInScrollView
@@ -305,7 +305,7 @@ extension ZZPlayerView: ZZPlayerDelegate {
             playerItemResources.count > 1 {
             if config.repeatMultipleItems && config.repeatSingleItem == false {
                 // 多个视频播放结束
-                guard let index = playerItemResources.index(where: { (item) -> Bool in
+                guard let index = playerItemResources.firstIndex(where: { (item) -> Bool in
                     return item.isEqual(playerItemResource)
                 }) else {
                     playToEnd(player: player)
@@ -329,7 +329,7 @@ extension ZZPlayerView: ZZPlayerDelegate {
 // MARK: - 辅助
 extension ZZPlayerView {
     /// 播放结束时
-    fileprivate func playToEnd(player: ZZPlayer) {
+    private func playToEnd(player: ZZPlayer) {
         startTimeLabel.text = "00:00"
         
         if config.repeatSingleItem {
@@ -348,7 +348,7 @@ extension ZZPlayerView {
     
     // MARK: - 屏幕方向改变
     ///
-    @objc fileprivate func orientationChanged() {
+    @objc private func orientationChanged() {
         let orientation = UIDevice.current.orientation
         let currentOrientation = UIDeviceOrientation.init(rawValue: UIApplication.shared.statusBarOrientation.rawValue)!
         
@@ -364,7 +364,7 @@ extension ZZPlayerView {
         toOrientation(orientation)
     }
     
-    fileprivate func toOrientation(_ orientation: UIDeviceOrientation) {
+    private func toOrientation(_ orientation: UIDeviceOrientation) {
         if containerView == nil { return }
         
         self.isFullScreen = orientation != .portrait
@@ -416,7 +416,7 @@ extension ZZPlayerView {
     }
     
     // MARK: - 控制层的显示隐藏
-    fileprivate func showControlLaterHide() {
+    private func showControlLaterHide() {
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         UIView.animate(withDuration: config.animateDuration, animations: {
             self.showStatusBar()
@@ -428,7 +428,7 @@ extension ZZPlayerView {
         }
     }
     
-    fileprivate func showControl() {
+    private func showControl() {
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         UIView.animate(withDuration: config.animateDuration, animations: {
             self.showStatusBar()
@@ -440,7 +440,7 @@ extension ZZPlayerView {
     }
     
     /// 隐藏控制条
-    @objc fileprivate func hideControl() {
+    @objc private func hideControl() {
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideControl), object: nil)
         UIView.animate(withDuration: config.animateDuration, animations: {
             self.hideStatusBar()
@@ -452,13 +452,12 @@ extension ZZPlayerView {
     }
     
     /// 稍后隐藏控制条
-    fileprivate func hideControlLater() {
+    private func hideControlLater() {
         perform(#selector(hideControl), with: nil, afterDelay: config.autoHideControlDuration)
     }
     
-    
     /// 显示状态栏
-    fileprivate func showStatusBar() {
+    private func showStatusBar() {
         switch config.statusBarShowMode {
         case .alwaysShow:
             config.statusBarHidden = false
@@ -475,7 +474,7 @@ extension ZZPlayerView {
     }
     
     /// 隐藏状态栏
-    fileprivate func hideStatusBar() {
+    private func hideStatusBar() {
         switch config.statusBarShowMode {
         case .alwaysShow:
             config.statusBarHidden = false
@@ -496,7 +495,7 @@ extension ZZPlayerView {
     }
     
     /// 转换时间
-    fileprivate func transform(time: Int) -> String {
+    private func transform(time: Int) -> String {
         var timeString = ""
         if time >= 3600 {
             timeString = String(format: "%02zd:%02zd:%02zd", time / 3600, time / 60, time % 60)
@@ -509,7 +508,7 @@ extension ZZPlayerView {
     // MARK: - 滑动控制播放进度
     
     /// 开始横向手势
-    fileprivate func beginPanHorizontal(location: CGPoint) {
+    private func beginPanHorizontal(location: CGPoint) {
         if config.quickProgressControlEnabled == false || validResource == false {
             return
         }
@@ -535,7 +534,7 @@ extension ZZPlayerView {
     
     
     /// 处理横向手势
-    fileprivate func panHorizontal(location: CGPoint) {
+    private func panHorizontal(location: CGPoint) {
         if config.quickProgressControlEnabled == false || validResource == false {
             return
         }
@@ -565,7 +564,7 @@ extension ZZPlayerView {
     
     
     /// 横向手势结束
-    fileprivate func endHorizontal() {
+    private func endHorizontal() {
         if config.quickProgressControlEnabled == false || validResource == false {
             return
         }
@@ -584,7 +583,7 @@ extension ZZPlayerView {
     // MARK: - 滑动控制音量/亮度
     
     /// 开始纵向手势
-    fileprivate func beginPanVertical(location: CGPoint) {
+    private func beginPanVertical(location: CGPoint) {
         panVolume = location.x < bounds.midX
         if panVolume {
             if config.volumeControlEnabled {
@@ -598,7 +597,7 @@ extension ZZPlayerView {
     }
     
     /// 处理纵向手势
-    fileprivate func panVertical(location: CGPoint) {
+    private func panVertical(location: CGPoint) {
         let offsetY = panStartLocation.y - location.y
         let offsetProgress = offsetY / bounds.height
         
@@ -607,7 +606,7 @@ extension ZZPlayerView {
                 var newValue = startVolumeValue + Float(offsetProgress)
                 newValue = max(newValue, 0)
                 newValue = min(newValue, 1)
-                
+                print("==========>", newValue)
                 volumeSlider.value = newValue
             }
         } else {
@@ -631,7 +630,7 @@ extension ZZPlayerView {
     }
     
     // 返回
-    func back() {
+    @objc func back() {
         if isFullScreen {
             fullscreen()
         } else {
@@ -659,7 +658,7 @@ extension ZZPlayerView {
     }
     
     /// 暂停、播放
-    func play_pause() {
+    @objc func play_pause() {
         guard let player = player else { return }
         showControlLaterHide()
         if !player.isPaused {
@@ -671,11 +670,11 @@ extension ZZPlayerView {
     }
     
     /// 下一首
-    func next_piece() {
+    @objc func next_piece() {
         guard let playerItemResources = playerItemResources,
             playerItemResources.count > 1 else { return }
         
-        guard let index = playerItemResources.index(where: { (item) -> Bool in
+        guard let index = playerItemResources.firstIndex(where: { (item) -> Bool in
             return item.isEqual(playerItemResource)
         }) else {
             return
@@ -688,7 +687,7 @@ extension ZZPlayerView {
     
     
     /// 全屏
-    func fullscreen() {
+    @objc func fullscreen() {
         if let player = player, !player.isPaused {
             hideControlLater()
         }
@@ -710,7 +709,7 @@ extension ZZPlayerView {
     
     
     /// 处理进度
-    @objc fileprivate func playProgress(sender: UISlider) {
+    @objc private func playProgress(sender: UISlider) {
         guard let player = player else { return }
         showControlLaterHide()
         player.seekTo(time: sender.value)
@@ -718,19 +717,19 @@ extension ZZPlayerView {
     
     
     /// 进度结束
-    @objc fileprivate func playProgressLeave(sender: UISlider) {
+    @objc private func playProgressLeave(sender: UISlider) {
         hideControlLater()
     }
     
     
     /// 点击手势，用来控制控制条的显示隐藏
-    @objc fileprivate func tapAction() {
+    @objc private func tapAction() {
         isControlShowing ? hideControl() : showControlLaterHide()
     }
     
     
     /// 滑动手势，用来控制音量、亮度、快进、快退
-    @objc fileprivate func panAction(pan: UIPanGestureRecognizer) {
+    @objc private func panAction(pan: UIPanGestureRecognizer) {
         let location = pan.location(in: self)
         
         if bounds.contains(location) == false {
@@ -783,11 +782,11 @@ extension ZZPlayerView {
         })
         
         removeScrollViewObserver()
-        playerScrllView = scrollView
-        playerScrllView?.addObserver(self, forKeyPath: "contentOffset", options: .new, context: nil)
+        playerScrollView = scrollView
+        playerScrollView?.addObserver(self, forKeyPath: "contentOffset", options: .new, context: nil)
     }
     
-    fileprivate var scrollView: UIScrollView? {
+    private var scrollView: UIScrollView? {
         var view = playerInCell?.superview
         while view != nil && (view is UITableView == false) && (view is UICollectionView == false) {
             view = view?.superview
@@ -795,10 +794,10 @@ extension ZZPlayerView {
         return view as? UIScrollView
     }
     
-    fileprivate func removeScrollViewObserver() {
-        if playerScrllView != nil {
-            playerScrllView?.removeObserver(self, forKeyPath: "contentOffset", context: nil)
-            playerScrllView = nil
+    private func removeScrollViewObserver() {
+        if playerScrollView != nil {
+            playerScrollView?.removeObserver(self, forKeyPath: "contentOffset", context: nil)
+            playerScrollView = nil
         }
     }
     
@@ -834,7 +833,7 @@ extension ZZPlayerView {
 
 // MARK: - UI
 extension ZZPlayerView {
-    fileprivate func setupUI() {
+    private func setupUI() {
         backgroundColor = UIColor.black
         
         setTopView()
@@ -1019,8 +1018,6 @@ extension ZZPlayerView {
         topView.isHidden = config.top.hidden
         addSubview(topView)
         
-        topView.isHidden = config.top.hidden
-        
         topView.addSubview(topBackgroundView)
         switch config.top.background {
         case let .gradientLayer(c1, c2):
@@ -1068,8 +1065,8 @@ extension ZZPlayerView {
     }
     
     
-    //MARK: - 更新约束
-    fileprivate func updateTop() {
+    // MARK: - 更新约束
+    private func updateTop() {
         topView.isHidden = config.top.hidden
         
         switch config.top.background {
@@ -1108,7 +1105,7 @@ extension ZZPlayerView {
         }
     }
     
-    fileprivate func updateMid() {
+    private func updateMid() {
         
         panPlayingStateView.isHidden = config.center.hidden
         
@@ -1131,7 +1128,7 @@ extension ZZPlayerView {
 
     }
     
-    fileprivate func updateBottom() {
+    private func updateBottom() {
         bottomView.isHidden = config.bottom.hidden
         
         switch config.bottom.background {
@@ -1160,9 +1157,6 @@ extension ZZPlayerView {
         nextBtn.setImage(config.bottom.next.image, for: .normal)
         nextBtn.isHidden = config.bottom.hideNext
 
-//        fullScreenBtn.setImage(config.bottom.fullScreen.image, for: .normal)
-        
-        
         startTimeLabel.textColor = config.bottom.startTime.color
         startTimeLabel.font = config.bottom.startTime.font
         
@@ -1175,9 +1169,7 @@ extension ZZPlayerView {
         
         progressView.trackTintColor = config.bottom.progressView.trackTintColor
         progressView.progressTintColor = config.bottom.progressView.progressTintColor
-        
-        
-        
+
         bottomView.snp.updateConstraints { (maker) in
             maker.height.equalTo(config.bottom.height)
         }
@@ -1242,7 +1234,7 @@ extension ZZPlayerView {
     }
     
     private func timeWidth(font: UIFont) -> CGFloat {
-        return ceil(("00:00:00" as NSString).boundingRect(with: CGSize(width: Int.max, height: Int.max), options: [], attributes: [NSFontAttributeName: font], context: nil).size.width)
+        return ceil(("00:00:00" as NSString).boundingRect(with: CGSize(width: Int.max, height: Int.max), options: [], attributes: [NSAttributedString.Key.font: font], context: nil).size.width)
     }
     
     /// 布局渐变层

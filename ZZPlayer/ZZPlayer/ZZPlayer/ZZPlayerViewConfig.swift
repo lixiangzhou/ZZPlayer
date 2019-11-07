@@ -154,9 +154,9 @@ class ZZPlayerViewConfig {
     var statusBarStyle = UIStatusBarStyle.default
     
     /// 状态条全屏模式的显示隐藏
-    var statusBarShowMode = ZZPlayerStatusBarShowMode.alwaysShow
+    var statusBarShowMode = ZZPlayerStatusBarShowMode.showHide
     /// 状态条显示隐藏
-    var statusBarHidden = false
+    var statusBarHidden = true
 }
 
 // MARK: - UI

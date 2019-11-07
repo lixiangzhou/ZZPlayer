@@ -42,12 +42,18 @@ class ViewController: UIViewController {
             maker.edges.equalToSuperview()
         }
         
-        let vm = VideoModel(title: "测试标题", videoUrlString: "http://baobab.wdjcdn.com/14525705791193.mp4")
+        let vm = VideoModel(title: "测试标题", videoUrlString: "http://video.699pic.com/videos/05/50/48/a_pneBEn5HmF381571055048.mp4")
 
         datas = Array<VideoModel>(repeating: vm, count: 10)
         
         ZZPlayerView.shared.configVertical.statusBarStyle = .default
+        ZZPlayerView.shared.configVertical.top.icon.size = .zero
+        ZZPlayerView.shared.configVertical.top.icon.rightPadding = 0
+        
         ZZPlayerView.shared.configHorizontal.statusBarStyle = .lightContent
+        ZZPlayerView.shared.configHorizontal.top.height = 60
+        ZZPlayerView.shared.configHorizontal.top.icon.offsetY = 10
+        ZZPlayerView.shared.configHorizontal.top.title.offsetY = 10
     }
 
     override var shouldAutorotate: Bool {
@@ -92,7 +98,7 @@ class ZZPlayerCell: UITableViewCell {
     
     var playClosure: (()->())?
     
-    override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         selectionStyle = .none
