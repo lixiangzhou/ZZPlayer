@@ -41,8 +41,6 @@ class ZZPlayerView: UIView {
         
         if rootView.isEqual(superview) == false {
             self.containerView = superview
-        } else {
-            
         }
     }
     
@@ -51,14 +49,36 @@ class ZZPlayerView: UIView {
     }
     
     // MARK: - 属性 Public
+    /// 屏幕方向模式
+    var orientationMode = ZZPlayerOrientationMode.any
+    
     /// 布局配置
-    var config = ZZPlayerViewConfig() {
-        didSet {
+    private var _config: ZZPlayerViewConfig!
+    var config: ZZPlayerViewConfig {
+        set {
+            switch orientationMode {
+            case .any:
+                _config = newValue
+            case .portrait:
+                _config = configVertical
+            case .landscapeRight, .landscapeLeft:
+                _config = configHorizontal
+            }
             updateTop()
             updateMid()
             updateBottom()
-            
+
             layoutIfNeeded()
+        }
+        get {
+            switch orientationMode {
+            case .any:
+                return _config ?? configVertical
+            case .portrait:
+                return configVertical
+            case .landscapeRight, .landscapeLeft:
+                return configHorizontal
+            }
         }
     }
     
@@ -75,6 +95,7 @@ class ZZPlayerView: UIView {
                 player?.playerItemResource = nil
                 validResource = false
                 titleLabel.text = ""
+                sliderView.value = 0
                 startTimeLabel.text = "00:00"
                 totalTimeLabel.text = "00:00"
                 return
@@ -287,17 +308,25 @@ extension ZZPlayerView: ZZPlayerDelegate {
     }
     
     func player(_ player: ZZPlayer, willChange state: ZZPlayerState) {
+        print(#function, state)
         if state == .readyToPlay {
             if config.autoPlay == false {
                 DispatchQueue.main.async {
                     self.player?.pauseByUser()
                 }
             } else {
+                DispatchQueue.main.async {
+                    self.play()
+                }
+                
                 hideControlLater()
             }
             self.player?.seekTo(time: Float(self.playerItemResource!.seekTo))
         }
-        state == .buffering ? loadingView.startAnimating() : loadingView.stopAnimating()
+        
+        let needLoading = state == .buffering || (state == .idle && player.currentPlayerItem != nil) || state == .readyToPlay
+        needLoading ? loadingView.startAnimating() : loadingView.stopAnimating()
+        
     }
     
     func playerDidPlayToEnd(_ player: ZZPlayer) {
@@ -343,6 +372,7 @@ extension ZZPlayerView {
             if config.showControlWhenPlayEnd {
                 showControl()
             }
+            pause()
         }
     }
     
@@ -352,7 +382,6 @@ extension ZZPlayerView {
         let orientation = UIDevice.current.orientation
         let currentOrientation = UIDeviceOrientation.init(rawValue: UIApplication.shared.statusBarOrientation.rawValue)!
         
-        
         if orientation == .faceUp ||
             orientation == .faceDown ||
             orientation == .unknown ||
@@ -361,7 +390,12 @@ extension ZZPlayerView {
             return
         }
         
-        toOrientation(orientation)
+        switch (orientationMode, orientation) {
+        case (.portrait, .portrait), (.landscapeLeft, .landscapeLeft), (.landscapeRight, .landscapeRight), (.any, _):
+            toOrientation(orientation)
+        default:
+            break
+        }
     }
     
     private func toOrientation(_ orientation: UIDeviceOrientation) {
@@ -410,8 +444,9 @@ extension ZZPlayerView {
             UIApplication.shared.statusBarOrientation = UIInterfaceOrientation(rawValue: orientation.rawValue)!
         default: break
         }
-        
-        controller?.setNeedsStatusBarAppearanceUpdate()
+        DispatchQueue.main.async {
+            self.controller?.setNeedsStatusBarAppearanceUpdate()
+        }
         showControlLaterHide()
     }
     
@@ -462,11 +497,7 @@ extension ZZPlayerView {
         case .alwaysShow:
             config.statusBarHidden = false
         case .alwaysHide:
-            if self.isFullScreen {
-                config.statusBarHidden = true
-            } else {
-                config.statusBarHidden = false
-            }
+            config.statusBarHidden = true
         case .showHide:
             config.statusBarHidden = false
         }
@@ -479,17 +510,9 @@ extension ZZPlayerView {
         case .alwaysShow:
             config.statusBarHidden = false
         case .alwaysHide:
-            if self.isFullScreen {
-                config.statusBarHidden = true
-            } else {
-                config.statusBarHidden = false
-            }
+            config.statusBarHidden = true
         case .showHide:
-            if self.isFullScreen {
-                config.statusBarHidden = true
-            } else {
-                config.statusBarHidden = false
-            }
+            config.statusBarHidden = true
         }
         controller?.setNeedsStatusBarAppearanceUpdate()
     }
@@ -606,7 +629,6 @@ extension ZZPlayerView {
                 var newValue = startVolumeValue + Float(offsetProgress)
                 newValue = max(newValue, 0)
                 newValue = min(newValue, 1)
-                print("==========>", newValue)
                 volumeSlider.value = newValue
             }
         } else {
@@ -631,12 +653,20 @@ extension ZZPlayerView {
     
     // 返回
     @objc func back() {
-        if isFullScreen {
-            fullscreen()
-        } else {
+        switch orientationMode {
+        case .any:
+            if isFullScreen {
+                fullscreen()
+            } else {
+                backAction?()
+            }
+        case .portrait:
+            backAction?()
+        case .landscapeLeft, .landscapeRight:
+            UIApplication.shared.statusBarOrientation = .portrait
             backAction?()
         }
-
+        
         print(#function)
     }
     
@@ -688,19 +718,27 @@ extension ZZPlayerView {
     
     /// 全屏
     @objc func fullscreen() {
-        if let player = player, !player.isPaused {
-            hideControlLater()
-        }
-        
-        if isFullScreen {
+        switch orientationMode {
+        case .portrait:
             toOrientation(.portrait)
-        } else {
-            let orientation = UIDevice.current.orientation
-            switch orientation {
-            case .landscapeLeft:
-                toOrientation(.landscapeRight)
-            default:
-                toOrientation(.landscapeLeft)
+        case .landscapeRight:
+            toOrientation(.landscapeRight)
+        case .landscapeLeft:
+            toOrientation(.landscapeLeft)
+        case .any:
+            if let player = player, !player.isPaused {
+                hideControlLater()
+            }
+            if isFullScreen {
+                toOrientation(.portrait)
+            } else {
+                let orientation = UIDevice.current.orientation
+                switch orientation {
+                case .landscapeLeft:
+                    toOrientation(.landscapeRight)
+                default:
+                    toOrientation(.landscapeLeft)
+                }
             }
         }
         
@@ -936,13 +974,13 @@ extension ZZPlayerView {
         progressView.trackTintColor = config.bottom.progressView.trackTintColor
         progressView.progressTintColor = config.bottom.progressView.progressTintColor
         
+        bottomView.addSubview(startTimeLabel)
+        bottomView.addSubview(totalTimeLabel)
         bottomView.addSubview(playPauseBtn)
         bottomView.addSubview(fullScreenBtn)
         bottomView.addSubview(nextBtn)
         bottomView.addSubview(progressView)
         bottomView.addSubview(sliderView)
-        bottomView.addSubview(startTimeLabel)
-        bottomView.addSubview(totalTimeLabel)
         
         playPauseBtn.addTarget(self, action: #selector(play_pause), for: .touchUpInside)
         nextBtn.addTarget(self, action: #selector(next_piece), for: .touchUpInside)
@@ -1212,17 +1250,36 @@ extension ZZPlayerView {
             maker.centerY.equalTo(sliderView).offset(0.5)
         }
         
-        totalTimeLabel.snp.updateConstraints { (maker) in
-            maker.centerY.equalTo(bottomView).offset(config.bottom.totalTime.offsetY)
-            maker.width.equalTo(timeWidth(font: config.bottom.totalTime.font))
-            maker.right.equalTo(fullScreenBtn.snp.left).offset(-config.bottom.totalTime.rightPadding)
+        switch orientationMode {
+        case .any:
+            fullScreenBtn.isHidden = false
+            totalTimeLabel.snp.remakeConstraints { (maker) in
+                maker.centerY.equalTo(bottomView).offset(config.bottom.totalTime.offsetY)
+                maker.width.equalTo(timeWidth(font: config.bottom.totalTime.font))
+                maker.right.equalTo(fullScreenBtn.snp.left).offset(-config.bottom.totalTime.rightPadding)
+            }
+            
+            fullScreenBtn.snp.remakeConstraints { (maker) in
+                maker.centerY.equalTo(bottomView).offset(config.bottom.fullScreen.offsetY)
+                maker.right.equalTo(-config.bottom.fullScreen.rightPadding)
+                maker.size.equalTo(config.bottom.fullScreen.size)
+            }
+        default:
+            fullScreenBtn.isHidden = true
+            
+            totalTimeLabel.snp.remakeConstraints { (maker) in
+                maker.centerY.equalTo(bottomView).offset(config.bottom.totalTime.offsetY)
+                maker.width.equalTo(timeWidth(font: config.bottom.totalTime.font))
+                maker.right.equalTo(-config.bottom.totalTime.rightPadding)
+            }
+            
+            fullScreenBtn.snp.remakeConstraints { (maker) in
+                maker.centerY.equalTo(bottomView).offset(config.bottom.fullScreen.offsetY)
+                maker.right.equalTo(-config.bottom.fullScreen.rightPadding)
+                maker.size.equalTo(config.bottom.fullScreen.size)
+            }
         }
         
-        fullScreenBtn.snp.updateConstraints { (maker) in
-            maker.centerY.equalTo(bottomView).offset(config.bottom.fullScreen.offsetY)
-            maker.right.equalTo(-config.bottom.fullScreen.rightPadding)
-            maker.size.equalTo(config.bottom.fullScreen.size)
-        }
     }
     
     /// 添加渐变层

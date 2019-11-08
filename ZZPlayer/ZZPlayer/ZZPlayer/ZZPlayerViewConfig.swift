@@ -127,7 +127,6 @@ class ZZPlayerViewConfig {
     var bottom = ZZPlayerViewBottomConfig()
     var center = ZZPlayerViewCenterConfig()
     
-    
     /// 控制层显示时长设置
     var autoHideControlDuration: TimeInterval = 4
     var animateDuration: TimeInterval = 0.5
@@ -137,7 +136,7 @@ class ZZPlayerViewConfig {
     var brightnessControlEnabled = true
     
     /// 快进快退控制
-    var quickProgressControlEnabled = false
+    var quickProgressControlEnabled = true
         
     /// 开始播放时是否自动播放，当播放结束时是否自动重新播放，优先级低于 playEndStop
     var autoPlay: Bool = true
@@ -149,9 +148,8 @@ class ZZPlayerViewConfig {
     /// 播放结束时是否显示控制层
     var showControlWhenPlayEnd = true
     
-    
     /// 状态条样式
-    var statusBarStyle = UIStatusBarStyle.default
+    var statusBarStyle = UIStatusBarStyle.lightContent
     
     /// 状态条全屏模式的显示隐藏
     var statusBarShowMode = ZZPlayerStatusBarShowMode.showHide
@@ -233,6 +231,10 @@ class ZZPlayerViewTopConfigButton {
 // MARK: - Helper
 enum ZZPlayerStatusBarShowMode {
     case alwaysShow, alwaysHide, showHide
+}
+
+enum ZZPlayerOrientationMode {
+    case portrait, landscapeLeft, landscapeRight, any
 }
 
 private func zz_bundleImage(_ imgName: String) -> UIImage? {

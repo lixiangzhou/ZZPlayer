@@ -18,6 +18,25 @@ import AVFoundation
     case failed             // 失败
 }
 
+extension ZZPlayerState: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .idle:
+            return "IDLE"
+        case .readyToPlay:
+            return "READYTOPLAY"
+        case .playing:
+            return "PLAYING"
+        case .paused:
+            return "PAUSED"
+        case .buffering:
+            return "BUFFERING"
+        case .failed:
+            return "FAILED"
+        }
+    }
+}
+
 /// 播放时需要观察的 keypath
 private enum ZZPlayerObseredKeyPath: String {
     case playToEndTime = "AVPlayerItemDidPlayToEndTimeNotification"
@@ -152,6 +171,11 @@ class ZZPlayer: UIView {
             return nil
         }
         return playerLayer?.player?.currentItem
+    }
+    
+    /// 是否正在使用
+    var isPlayerInUse: Bool {
+        return superview?.superview != nil
     }
     // MARK: - Private
     /// 播放层

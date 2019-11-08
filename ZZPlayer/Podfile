@@ -7,7 +7,7 @@ target 'ZZPlayer' do
 
   # Pods for ZZPlayer
 
-pod ‘Kingfisher’
-pod ‘SnapKit’
+pod 'Kingfisher'
+pod 'SnapKit'
 
 end
